@@ -10,7 +10,9 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="realmayus",
+    url="https://github.com/realmayus/chime",
     author_email="realmayus@gmail.com",
+    license="GPLv3",
     packages=["chime"],
     install_requires=["discord"],
     python_requires=">=3.7",
@@ -23,5 +25,10 @@ setup(
         "Topic :: Communications",
         "Topic :: Communications :: Conferencing",
         "Topic :: Multimedia :: Sound/Audio :: Players"
-    ]
+    ],
+    entry_points={
+        "console_scripts": [
+            "chime=chime.main:main"
+        ]
+    }
 )
