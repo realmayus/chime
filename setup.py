@@ -1,11 +1,12 @@
 from setuptools import setup
+from chime.main import version
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="chime",
-    version="1.0.0",
+    name="chime-discord",
+    version=version,
     description="A scalable, intuitive and easy-to-use music bot for Discord.",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -28,7 +29,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "chime=chime.main:main"
+            "chime=chime.main:start"
         ]
     }
 )
