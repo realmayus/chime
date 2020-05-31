@@ -16,6 +16,8 @@ class MiscCog(commands.Cog):
         """Gets called when the bot is connected to Discord. Activates the status task which updates the bot's status every 5 minutes"""
         self.bot.loop.create_task(self.status_task())
         self.logger.info("Bot logged in as " + str(self.bot.user))
+        if not hasattr(self.bot, "emoji_guild"):
+            self.bot.emoji_guild = await self.bot.fetch_guild(716228019345293352)
         print("Bot logged in as " + str(self.bot.user))
 
 

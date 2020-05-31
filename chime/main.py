@@ -1,3 +1,4 @@
+from discord import Guild
 from discord.ext import commands
 from chime.util import init_logger, get_token
 from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
