@@ -3,11 +3,12 @@ from typing import List
 
 import discord
 import wavelink
-from discord import Message, Reaction, User, Emoji, RawReactionActionEvent
+from discord import Message, Reaction, User, RawReactionActionEvent
 from discord.ext import commands
+from discord.ext.commands import Context
 from wavelink import Track
 
-from chime.util import check_if_url, get_friendly_time_delta
+from chime.misc.util import check_if_url, get_friendly_time_delta
 from chime.main import prefix
 from chime.misc.StyledEmbed import StyledEmbed
 
@@ -61,7 +62,13 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             i += 1
         return desc, i
 
-    async def play_(self, ctx, query:str, current_page=0, msg_to_edit:Message=None):
+    @staticmethod
+    async def react_with_pagination_emoji(msg, count, show_next):
+        [await msg.add_reaction(u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(x + 1)) for x in range(count - 1)]
+        if show_next:
+            await msg.add_reaction("▶️")
+
+    async def play_(self, ctx, query: str, current_page=0, msg_to_edit: Message = None):
         player = self.bot.wavelink.get_player(ctx.guild.id)
 
         if check_if_url(query):
@@ -89,10 +96,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         else:
             msg: Message = await ctx.send(embed=embed)
 
-        [await msg.add_reaction(u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(x + 1)) for x in
-         range(count - 1)]
-        if len(tracks) - (current_page * 5) > 5:
-            await msg.add_reaction("▶️")
+        if current_page == 0:
+            self.bot.loop.create_task(self.react_with_pagination_emoji(msg=msg, show_next=(len(tracks) - (current_page * 5) > 5), count=count))
 
         def check_reaction(reaction_: RawReactionActionEvent):
             return reaction_.member == ctx.author and isinstance(reaction_.emoji.name, str) and (
@@ -111,19 +116,21 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             await msg.edit(embed=expired_embed)
         else:
             if str(reaction.emoji.name[0]).isdigit() and int(str(reaction.emoji.name)[0]) in range(count):
-                await player.play(tracks[int(str(reaction.emoji.name)[0]) - 1])
-                current_track = tracks[int(str(reaction.emoji.name[0]))-1]
+                current_track = tracks[(current_page * 5) + int(str(reaction.emoji.name[0])) - 1]
+                await player.play(current_track)
                 currently_playing_embed = StyledEmbed(title="<:music_note:716669042500436010>  " + current_track.title)
                 currently_playing_embed.set_author(name="Currently playing")
                 currently_playing_embed.add_field(name="Duration", value=get_friendly_time_delta(current_track.duration))
                 currently_playing_embed.add_field(name="Artist", value=current_track.author)
+                currently_playing_embed.add_field(name="Link", value="[Open](" + current_track.uri + ")")
                 await msg.clear_reactions()
                 await msg.edit(embed=currently_playing_embed)
                 if not player.is_connected:
                     await ctx.invoke(self.join)
             elif str(reaction.emoji.name) == "▶️":
                 await msg.remove_reaction("▶️", user)
-                await self.play_(ctx, query, current_page + 1, msg)
+                if len(tracks) - (current_page * 5) > 5:
+                    await self.play_(ctx, query, current_page + 1, msg)
             else:
                 raise NotImplementedError
 
@@ -158,11 +165,11 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await ctx.send("This command is not implemented yet.")
 
     @commands.command()
-    async def volume(self, ctx, volume: int):
+    async def volume(self, ctx: Context, volume: int):
         """Sets the volume of the current track. Valid values: `0%` - `1000%`. For bass-boosting see """ + prefix + """boost"""
         player = self.bot.wavelink.get_player(ctx.guild.id)
         await player.set_volume(volume)
-        await ctx.send("Set volume to " + str(volume) + "!")
+        await ctx.message.add_reaction("<:OK:716230152643674132>")
 
     @commands.command()
     async def boost(self, ctx):
@@ -201,3 +208,5 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     async def clear(self, ctx):
         """Clears the queue."""
         await ctx.send("This command is not implemented yet.")
+
+

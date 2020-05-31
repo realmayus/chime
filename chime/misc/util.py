@@ -15,7 +15,7 @@ url_regex = re.compile(
 
 def init_logger() -> 'logging.Logger':
     log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
-    log_file = '../log.txt'
+    log_file = '../../log.txt'
     my_handler = RotatingFileHandler(filename=log_file, mode='w', maxBytes=5 * 1024 * 1024, backupCount=2, encoding=None, delay=0)
     my_handler.setFormatter(log_formatter)
     my_handler.setLevel(logging.INFO)
@@ -41,9 +41,9 @@ def check_if_url(url: str) -> bool:
 def get_friendly_time_delta(time_millis: int) -> str:
     millis = int(time_millis)
     seconds = (millis/1000) % 60
-    seconds = int(seconds)
+    seconds = str(int(seconds)) + "s"
     minutes = (millis/(1000*60)) % 60
-    minutes = int(minutes)
-    hours = (millis/(1000*60*60)) % 24
+    minutes = str(int(minutes)) + "m"
+    hours = str(int((millis/(1000*60*60)) % 24)) + "h"
 
-    return "%dh:%dm:%ds" % (hours, minutes, seconds)
+    return " ".join([hours if hours != "0h" else "", minutes if minutes != "0m" else "", seconds])

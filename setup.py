@@ -14,7 +14,7 @@ setup(
     url="https://github.com/realmayus/chime",
     author_email="realmayus@gmail.com",
     license="GPLv3",
-    packages=["chime"],
+    packages=["chime", "chime.cogs", "chime.misc"],
     install_requires=["discord"],
     python_requires=">=3.7",
     classifiers=[
