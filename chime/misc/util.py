@@ -3,6 +3,11 @@ import logging
 import re
 from logging.handlers import RotatingFileHandler
 
+from google.cloud.firestore_v1 import Client
+from google.cloud.firestore_v1.proto.document_pb2 import Document
+from wavelink import Track
+
+from chime.misc.StyledEmbed import StyledEmbed
 
 url_regex = re.compile(
     r'^(?:http|ftp)s?://'  # http:// or https://
@@ -47,3 +52,41 @@ def get_friendly_time_delta(time_millis: int) -> str:
     hours = str(int((millis/(1000*60*60)) % 24)) + "h"
 
     return " ".join([hours if hours != "0h" else "", minutes if minutes != "0m" else "", seconds])
+
+
+def get_song_selector_embed_desc_for_current_page(page, results):
+    desc = "**React with a number to play the respective song!**\n"
+    i = 1
+    for track_index in range(len(results)):
+        track = results[page * 5 + track_index]
+        if i == 6:
+            break
+        desc += (u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(i)) + "  " + str(track) + "\n"
+        i += 1
+    return desc, i
+
+
+async def react_with_pagination_emoji(msg, count, show_next):
+    [await msg.add_reaction(u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(x + 1)) for x in
+     range(count - 1)]
+    if show_next:
+        await msg.add_reaction("▶️")
+
+
+def get_currently_playing_embed(current_track: Track):
+    currently_playing_embed = StyledEmbed(title="<:music_note:716669042500436010>  " + current_track.title)
+    currently_playing_embed.set_author(name="Now playing", url=current_track.uri)
+    currently_playing_embed.add_field(name="Duration",
+                                      value=get_friendly_time_delta(current_track.duration))
+    currently_playing_embed.add_field(name="Artist", value=current_track.author)
+    if current_track.thumb is not None:
+        currently_playing_embed.set_thumbnail(url=current_track.thumb)
+    return currently_playing_embed
+
+
+def check_if_playlist_exists(db: Client, name: str, user: int):
+    doc_ref = db.collection(str(user)).document(str(name))
+    doc = doc_ref.get()
+    if doc.exists:
+        return True
+    return False

@@ -1,6 +1,6 @@
 from discord.ext import commands
+
 from chime.misc.util import init_logger, get_token
-from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
 from chime.cogs.HelpCommandCog import EmbedHelpCommand
 
 # If activated: Uses the token-dev to minimize downtime while developing
@@ -17,6 +17,8 @@ def start():
     from chime.cogs.MusicCommandsCog import MusicCommandsCog
     from chime.cogs.MiscCommandsCog import MiscCommandsCog
     from chime.cogs.MiscCog import MiscCog
+    from chime.cogs.PersonalPlaylistsCog import PersonalPlaylistsCog
+    from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
 
     logger.info("Starting chime v." + version + "…")
     print("Starting chime v." + version + "…")
@@ -24,6 +26,7 @@ def start():
     bot.add_cog(MiscCommandsCog(bot))
     bot.add_cog(MiscCog(bot))
     bot.add_cog(CommandErrorHandlerCog(bot))
+    bot.add_cog(PersonalPlaylistsCog(bot))
     logger.info("Loaded cogs!")
     print("Loaded cogs!")
     bot.run(get_token(start_dev))

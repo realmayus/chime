@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from chime.misc.StyledEmbed import StyledEmbed
+
 
 class EmbedHelpCommand(commands.HelpCommand):
     """This is an example of a HelpCommand that utilizes embeds.
@@ -21,7 +23,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         return '{0.qualified_name} {0.signature}'.format(command)
 
     async def send_bot_help(self, mapping):
-        embed = discord.Embed(title='chime help', colour=self.COLOUR)
+        embed = StyledEmbed(title='chime help', colour=self.COLOUR)
         embed.set_image(url="https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK")
         embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" \
                             "Want to support the development of chime while getting exclusive benefits? **[Donate](https://github.com/realmayus/chime)** \n \n" \
@@ -42,7 +44,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = discord.Embed(title='{0.qualified_name} commands'.format(cog), colour=self.COLOUR)
+        embed = StyledEmbed(title='{0.qualified_name} commands'.format(cog), colour=self.COLOUR)
         if cog.description:
             embed.description = cog.description
 
@@ -53,7 +55,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        embed = discord.Embed(title=group.qualified_name, colour=self.COLOUR)
+        embed = StyledEmbed(title=group.qualified_name, colour=self.COLOUR)
         if group.help:
             embed.description = group.help
 
