@@ -3,6 +3,7 @@ import logging
 import re
 from logging.handlers import RotatingFileHandler
 
+from discord import Message
 from google.cloud.firestore_v1 import Client
 from google.cloud.firestore_v1.proto.document_pb2 import Document
 from wavelink import Track
@@ -66,7 +67,7 @@ def get_song_selector_embed_desc_for_current_page(page, results):
     return desc, i
 
 
-async def react_with_pagination_emoji(msg, count, show_next):
+async def react_with_pagination_emoji(msg: Message, count: int, show_next: bool):
     [await msg.add_reaction(u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(x + 1)) for x in
      range(count - 1)]
     if show_next:

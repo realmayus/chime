@@ -12,6 +12,7 @@ from wavelink import Track
 
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.MusicController import MusicController
+from chime.misc.SongSelector import SongSelector
 from chime.misc.util import check_if_url, get_friendly_time_delta, get_song_selector_embed_desc_for_current_page, \
     react_with_pagination_emoji, get_currently_playing_embed
 from chime.main import prefix
@@ -86,9 +87,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller = self.get_controller(ctx)
         controller.channel = ctx.channel
 
+
     async def play_(self, ctx, query: str, current_page=0, msg_to_edit: Message = None):
         player = self.bot.wavelink.get_player(ctx.guild.id)
-        tracks = False
         if query == "^":
             x = await ctx.channel.history(limit=2).flatten()
             query = x[1].content
@@ -109,55 +110,19 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if not tracks:
             raise BadRequestException('Could not find any songs with that query.')
 
-        embed = StyledEmbed(title="Search results (Page " + str(current_page + 1) + ")")
+        async def success_callback(track, last_msg: Message):
+            await last_msg.clear_reactions()
+            await last_msg.edit(embed=StyledEmbed(description=f"**Added** {track} **to queue.**"), delete_after=10.0)
+            if not player.is_connected:
+                await ctx.invoke(self.join)
 
-        description, count = get_song_selector_embed_desc_for_current_page(current_page, tracks)
-        embed.description = description
+            controller_ = self.get_controller(ctx)
+            await controller_.queue.put(track)
 
-        if msg_to_edit is not None:
-            await msg_to_edit.edit(embed=embed)
-            msg = msg_to_edit
-        else:
-            msg: Message = await ctx.send(embed=embed)
-
-        reaction_task = None
-        if current_page == 0:
-            reaction_task = self.bot.loop.create_task(react_with_pagination_emoji(msg=msg, show_next=(len(tracks) - (current_page * 5) > 5), count=count))
-
-        def check_reaction(reaction_: RawReactionActionEvent):
-            return reaction_.member == ctx.author and isinstance(reaction_.emoji.name, str) and ((reaction_.emoji.name[0].isdigit() and int(str(reaction_.emoji.name)[0]) in range(count)) or (str(reaction_.emoji.name) == "▶️" and len(tracks) - (current_page * 5) > 5)) and reaction_.message_id == msg.id
-
-        try:
-            reaction: Reaction
-            user: User
-            reaction: RawReactionActionEvent = await self.bot.wait_for('raw_reaction_add', timeout=20.0, check=check_reaction)
-            user = reaction.member
-        except asyncio.TimeoutError:
-            await msg.clear_reactions()
-            expired_embed = StyledEmbed(title="Expired",
-                                          description="This song selector has expired because no one selected a song.")
-            await msg.edit(embed=expired_embed, delete_after=15.0)
-        else:
-            if str(reaction.emoji.name[0]).isdigit() and int(str(reaction.emoji.name)[0]) in range(count):
-                current_track = tracks[(current_page * 5) + int(str(reaction.emoji.name[0])) - 1]
-                if not player.is_connected:
-                    await ctx.invoke(self.join)
-
-                controller = self.get_controller(ctx)
-                await controller.queue.put(current_track)
-                if reaction_task is not None:
-                    reaction_task.cancel()
-                await msg.clear_reactions()
-                await msg.edit(embed=StyledEmbed(description=f"**Added** {current_track} **to queue.**"), delete_after=10.0)
+        songselector = SongSelector(tracks, self.bot, success_callback, ctx)
+        await songselector.send(songselector.get())
 
 
-
-            elif str(reaction.emoji.name) == "▶️":
-                await msg.remove_reaction("▶️", user)
-                if len(tracks) - (current_page * 5) > 5:
-                    await self.play_(ctx, query, current_page + 1, msg)
-            else:
-                raise NotImplementedError
 
     @commands.command()
     async def play(self, ctx, *, query: str):

@@ -10,7 +10,7 @@ from wavelink import Track
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import check_if_playlist_exists
+from chime.misc.util import check_if_playlist_exists, check_if_url
 import chime
 
 
@@ -34,8 +34,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             if not additional_args:  # if the playlist name contained spaces, the individual parts would be in additional_args
                 if not check_if_playlist_exists(self.db, playlist, ctx.author.id):
                     with ctx.typing():
-                        doc_ref = self.db.collection(str(ctx.author.id)).document(str(playlist))
-                        doc_ref.set({"contents": []})
+                        contents = self.db.collection(str(ctx.author.id)).document(str(playlist)).collection("contents")
                         await ctx.message.add_reaction("<:OK:716230152643674132>")
                 else:
                     raise BadRequestException(f"A playlist with the name `{playlist}` exists already!")
@@ -70,8 +69,28 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
 
 
     @commands.command(usage="add [playlist] <search term>")
-    async def add(self, ctx: Context, playlist: str, search_term: str = None):
+    async def add(self, ctx: Context, playlist: str, *, search_term: str = None):
         """Adds the current song or a song from a search term to the given playlist"""
+        player = self.bot.wavelink.get_player(ctx.guild.id)
+        if search_term == "^":
+            x = await ctx.channel.history(limit=2).flatten()
+            search_term = x[1].content
+
+        if check_if_url(search_term):  # user provided an URL
+            if not player.is_connected:
+                await ctx.invoke(self.join)
+            tracks: List[Track] = await self.bot.wavelink.get_tracks(search_term)
+        else:  # user didn't provide an URL so search for the entered term
+            i = 0
+            tracks = False
+            while not tracks and i < 5:  # try to find song 5 times
+                tracks: List[Track] = await self.bot.wavelink.get_tracks(f'ytsearch:{search_term}')
+                i += 1
+        if not tracks:
+            raise BadRequestException('Could not find any songs with that query.')
+
+
+        await ctx.message.add_reaction("<:OK:716230152643674132>")
 
     @commands.command(usage="remove [playlist] <search term>")
     async def remove(self, ctx: Context, playlist: str, search_term: str = None):
