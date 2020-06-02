@@ -1,22 +1,19 @@
-import asyncio
-import datetime
 from typing import List, Union
 
 import discord
-import humanize as humanize
 import wavelink
-from discord import Message, Reaction, User, RawReactionActionEvent, TextChannel, Client
+from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
-from wavelink import Track
+from wavelink import Track, Player, TrackPlaylist
 
+from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.MusicController import MusicController
+from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.SongSelector import SongSelector
-from chime.misc.util import check_if_url, get_friendly_time_delta, get_song_selector_embed_desc_for_current_page, \
-    react_with_pagination_emoji, get_currently_playing_embed
-from chime.main import prefix
 from chime.misc.StyledEmbed import StyledEmbed
+from chime.misc.util import check_if_url
 
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):
@@ -28,17 +25,16 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
         self.controllers = {}
 
-
     async def start_nodes(self):
         await self.bot.wait_until_ready()
         # Initiate our nodes. For this example we will use one server.
         # Region should be a discord.py guild.region e.g sydney or us_central (Though this is not technically required)
         node: wavelink.Node = await self.bot.wavelink.initiate_node(host='0.0.0.0',
-                                                     port=2333,
-                                                     rest_uri='http://0.0.0.0:2333',
-                                                     password='youshallnotpass',
-                                                     identifier='TEST',
-                                                     region='us_central')
+                                                                    port=2333,
+                                                                    rest_uri='http://0.0.0.0:2333',
+                                                                    password='youshallnotpass',
+                                                                    identifier='TEST',
+                                                                    region='us_central')
         node.set_hook(self.on_event_hook)
 
     async def cog_check(self, ctx):
@@ -68,25 +64,22 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel = None):
         """Joins the channel you're currently in."""
-        if not channel:
-            try:
-                channel = ctx.author.voice.channel
-            except AttributeError:
-                raise BadRequestException('No channel to join. Please join one.')
-            except Exception as e:
-                print(type(e))
-                print(str(e))
+        await self.join_(ctx, channel, False)
 
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        try:
+    async def join_(self, ctx, channel=None, suppress_warning=False):
+        if not channel:
+            channel = ctx.author.voice.channel
+            if channel is None:
+                raise BadRequestException('No channel to join. Please join one.')
+        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+        if player.channel_id == channel.id:
+            if not suppress_warning:
+                raise BadRequestException('I\'m already in this channel :)')
+        else:
             await player.connect(channel.id)
-        except Exception as e:
-            print(type(e))
-            print(str(e))
 
         controller = self.get_controller(ctx)
         controller.channel = ctx.channel
-
 
     async def play_(self, ctx, query: str, current_page=0, msg_to_edit: Message = None):
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -97,14 +90,23 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if check_if_url(query):  # user provided an URL, play that
             if not player.is_connected:
                 await ctx.invoke(self.join)
-            tracks: List[Track] = await self.bot.wavelink.get_tracks(query)
+            tracks = await self.bot.wavelink.get_tracks(query)
+
+            if isinstance(tracks, TrackPlaylist):
+                tracks = tracks.tracks
+                await ctx.send(embed=StyledEmbed(description=f"**Added** {len(tracks)} **tracks to queue.**"))
+            else:
+                await ctx.send(embed=StyledEmbed(description=f"**Added** {tracks[0]} **to queue.**"))
+
             controller = self.get_controller(ctx)
-            await ctx.message.add_reaction("<:OK:716230152643674132>")
-            return await controller.queue.put(tracks[0])
+            for track in tracks:
+                controller.queue.append(track)
+            return
         else:  # user didn't provide an URL so search for the entered term
             i = 0
             tracks = False
             while not tracks and i < 5:  # try to find song 5 times
+                print("searching :peepodetective:")
                 tracks: List[Track] = await self.bot.wavelink.get_tracks(f'ytsearch:{query}')
                 i += 1
         if not tracks:
@@ -117,25 +119,24 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 await ctx.invoke(self.join)
 
             controller_ = self.get_controller(ctx)
-            await controller_.queue.put(track)
+            controller_.queue.append(track)
 
         songselector = SongSelector(tracks, self.bot, success_callback, ctx)
         await songselector.send(songselector.get())
-
-
 
     @commands.command()
     async def play(self, ctx, *, query: str):
         """Searches for the search term on youtube or plays from the given URL. When `liked` is passed as the only argument, the bot plays your liked songs"""
         await self.play_(ctx, query)
 
-    @commands.command()
+    @commands.command(aliases=["stop"])
     async def pause(self, ctx):
         """Pauses the current track"""
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if player.is_playing and not player.is_paused:
             await player.set_pause(True)
-            await ctx.send("Paused!")
+            await ctx.send(embed=StyledEmbed(description=f"Stopped song! Use `{prefix}resume` to resume it."),
+                           delete_after=20.0)
         else:
             raise BadRequestException("I am currently not playing any track!")
 
@@ -145,7 +146,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if player.is_playing and player.is_paused:
             await player.set_pause(False)
-            await ctx.send("Resumed!")
+            await ctx.message.add_reaction("<:OK:716230152643674132>")
         else:
             raise BadRequestException("Currently, no track is loaded/paused")
 
@@ -154,7 +155,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         """Changes the speed. Valid values: `25%` - `200%`"""
         await ctx.send("This command is not implemented yet.")
 
-    @commands.command()
+    @commands.command(aliases=["vol"])
     async def volume(self, ctx: Context, volume: int):
         """Sets the volume of the current track. Valid values: `3` - `100`. Default is 40. For bass-boosting see """ + prefix + """boost"""
         if volume > 100 or volume < 3:
@@ -169,7 +170,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         """Boosts the bass of the current track."""
         await ctx.send("This command is not implemented yet.")
 
-    @commands.command()
+    @commands.command(aliases=["quit"])
     async def leave(self, ctx):
         """Leaves the current channel."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -182,45 +183,44 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await player.disconnect()
         await ctx.message.add_reaction("👋")
 
-
-    @commands.command()
-    async def stop(self, ctx):
-        """Stops the current track."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        try:
-            await player.stop()
-        except Exception:
-            # await player.disconnect()
-            raise BadRequestException("There is nothing to stop!")
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
-
-
-    @commands.command()
+    @commands.command(aliases=["nowplaying", "now", "playing", "song"])
     async def current(self, ctx):
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        if not player.current:
+        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+        if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
 
         controller = self.get_controller(ctx)
         await controller.now_playing.delete()
 
-        controller.now_playing = await ctx.send(f'Now playing: `{player.current}`')
+        controller.now_playing_msg = await ctx.send(f'Now playing: `{player.current}`')
 
-    @commands.command()
-    async def loop(self, ctx):
-        """Sets the looping mode. Valid values: `off`, `on`, `track`, `queue`"""
-        pass
+    @commands.command(aliases=["repeat"])
+    async def loop(self, ctx, looping_mode):
+        """Sets the looping mode. Valid values: `off`, `track`, `queue`"""
+        controller = self.get_controller(ctx)
+
+        if looping_mode in ["off", "track", "queue"]:
+            if looping_mode == "off":
+                controller.looping_mode = 0
+            elif looping_mode == "track":
+                controller.looping_mode = 1
+            elif looping_mode == "queue":
+                controller.looping_mode = 2
+            await ctx.message.add_reaction("<:OK:716230152643674132>")
+        else:
+            raise BadRequestException("Invalid value for this command. Valid values: `off`, `track`, `queue`")
 
     @commands.command(name="queue")
     async def queue_(self, ctx):
         """Shows the queue."""
         controller = self.get_controller(ctx)
-        await ctx.send(embed=StyledEmbed(title="Queue", description=("\n".join([("**" + song.title + "**") for song in controller.queue._queue])) if len(controller.queue._queue) > 0 else "<:warning:717043607298637825>  Queue is empty!"))
+
+        pagedlist = PagedListEmbed("Queue Current Index: " + str(controller.current_index), [str(index + 1) + ".   **" + song.title + "**" if index == controller.current_index - 1 else str(index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
+        await pagedlist.send(pagedlist.get())
 
     @commands.command()
     async def clear(self, ctx):
         """Clears the queue."""
-
 
     @commands.command()
     async def skip(self, ctx):
@@ -233,5 +233,10 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await ctx.send('Skipping the song!', delete_after=15)
         await player.stop()
 
+    @commands.command(aliases=["fastforward", "ff"])
+    async def seek(self, ctx, seconds: int = None):
+        """Fast-forwards the 15 seconds or a given amount of seconds in the current song."""
 
-
+    @commands.command()
+    async def jump(self, ctx, position):
+        """Jumps to the given position in the current queue/playlist."""

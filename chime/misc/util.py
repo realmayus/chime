@@ -59,11 +59,14 @@ def get_song_selector_embed_desc_for_current_page(page, results):
     desc = "**React with a number to play the respective song!**\n"
     i = 1
     for track_index in range(len(results)):
-        track = results[page * 5 + track_index]
-        if i == 6:
-            break
-        desc += (u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(i)) + "  " + str(track) + "\n"
-        i += 1
+        try:
+            track = results[page * 5 + track_index]
+            if i == 6:
+                break
+            desc += (u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(i)) + "  " + str(track) + "\n"
+            i += 1
+        except IndexError:
+            pass
     return desc, i
 
 

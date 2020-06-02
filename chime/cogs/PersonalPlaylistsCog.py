@@ -9,6 +9,7 @@ from wavelink import Track
 
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
+from chime.misc.SongSelector import SongSelector
 from chime.misc.StyledEmbed import StyledEmbed
 from chime.misc.util import check_if_playlist_exists, check_if_url
 import chime
@@ -89,6 +90,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
         if not tracks:
             raise BadRequestException('Could not find any songs with that query.')
 
+        selector = SongSelector(tracks, )
 
         await ctx.message.add_reaction("<:OK:716230152643674132>")
 
