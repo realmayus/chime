@@ -23,7 +23,7 @@ class MusicController:
         self.current_track = None
         self.volume = 40  # default volume
         self.now_playing_msg = None
-        self.bot.loop.create_task(self.controller_loop())
+        self.task = self.bot.loop.create_task(self.controller_loop())
 
     async def controller_loop(self):
         await self.bot.wait_until_ready()

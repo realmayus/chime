@@ -6,9 +6,10 @@ from discord import RawReactionActionEvent, Message
 from discord.ext import commands
 from discord.ext.commands import Bot, BucketType
 
+from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
 from github import Github
-from chime.main import auto_issues_issue, user_feedback_issue, user_issues_issue
+from chime.main import user_feedback_issue, user_issues_issue
 
 from chime.misc.util import send_github_comment
 
@@ -19,13 +20,24 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
 
         self.github_client = Github("")
 
+    @commands.command(hidden=True)
+    async def shutdown(self, ctx):
+        """Shuts down the bot. Only available to the bot owner."""
+        is_owner = await self.bot.is_owner(ctx.author)
+        if is_owner:
+            await ctx.message.add_reaction("👋")
+            await self.bot.close()
+            quit(0)
+        else:
+            raise BadRequestException("You don't have sufficient permissions to execute this command.")
+
     @commands.cooldown(3, 10*60, BucketType.guild)
     @commands.command()
     async def feedback(self, ctx):
         """Gives you options to send feedback or to report bugs"""
         msg: Message = await ctx.send(embed=StyledEmbed(title="Feedback", description="Thanks for helping to improve chime! What's the problem? \n \n "
                                                                        u"1\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to send feedback\n"
-                                                                       u"2\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to report an urgent issue\n"
+                                                                       u"2\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to report an outage\n"
                                                                        u"3\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to report a bug\n"))
         [await msg.add_reaction(u"%s\N{variation selector-16}\N{combining enclosing keycap}" % str(x + 1)) for x in range(3)]
 
@@ -48,7 +60,7 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
                 if selected_number == 1:
                     what_to_do = "Send Feedback"
                 elif selected_number == 2:
-                    what_to_do = "Report Urgent Issue"
+                    what_to_do = "Report Outage"
                 elif selected_number == 3:
                     what_to_do = "Report Bug"
 

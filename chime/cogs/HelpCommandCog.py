@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands import Command
 
+from chime.main import prefix
 from chime.misc.StyledEmbed import StyledEmbed
 
 
@@ -23,19 +25,24 @@ class EmbedHelpCommand(commands.HelpCommand):
         return '{0.qualified_name} {0.signature}'.format(command)
 
     async def send_bot_help(self, mapping):
-        embed = StyledEmbed(title='chime help', colour=self.COLOUR)
+        embed = StyledEmbed(title='chime help')
         embed.set_image(url="https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK")
         embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" \
                             "Want to support the development of chime while getting exclusive benefits? **[Donate](https://github.com/realmayus/chime)** \n \n" \
                             "**More info and invite link [here](https://github.com/realmayus/chime)** \n\n" \
-                            "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**"  # TODO Change LINK
+                            "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**\n" \
+                            "**Use** `" + self.clean_prefix + "help [category]` **for more info on a category.**"
 
         for cog, commands in mapping.items():
             if cog is not None:  # We don't want commands without categories! >:c
                 name = cog.qualified_name
                 filtered = await self.filter_commands(commands, sort=True)
                 if filtered:
-                    value = '  '.join("`*" + c.name + "`" for c in commands)
+                    builder = []
+                    for command in commands:  # filtering out hidden commands
+                        command: Command
+                        builder.append(f"`{prefix + command.name}`" if not command.hidden else "")
+                    value = '  '.join(builder)
                     if cog and cog.description:
                         value = '{0}\n{1}'.format(cog.description, value)
 
@@ -44,7 +51,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = StyledEmbed(title='{0.qualified_name} commands'.format(cog), colour=self.COLOUR)
+        embed = StyledEmbed(title='{0.qualified_name}'.format(cog))
         if cog.description:
             embed.description = cog.description
 
@@ -55,7 +62,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        embed = StyledEmbed(title=group.qualified_name, colour=self.COLOUR)
+        embed = StyledEmbed(title=group.qualified_name)
         if group.help:
             embed.description = group.help
 

@@ -1,6 +1,5 @@
 from discord.ext import commands
 
-from chime.cogs.HelpCommandCog import EmbedHelpCommand
 
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
@@ -8,7 +7,8 @@ start_dev = True
 logger = None
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
-bot = commands.Bot(command_prefix=prefix, help_command=EmbedHelpCommand())
+
+# TODO per-server prefix (see ?tag server prefix on d.py server)
 
 
 report_issues = False  # Only turn this off while developing!
@@ -27,7 +27,9 @@ def start():
     from chime.cogs.PersonalPlaylistsCog import PersonalPlaylistsCog
     from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
     from chime.misc.util import get_token
+    from chime.cogs.HelpCommandCog import EmbedHelpCommand
 
+    bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     logger.info("Starting chime v." + version + "…")
     print("Starting chime v." + version + "…")
     bot.add_cog(MusicCommandsCog(bot))

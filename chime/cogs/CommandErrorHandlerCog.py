@@ -26,8 +26,8 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error.original.text)))
         elif isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
-        # elif isinstance(error, discord.ext.commands.errors.BadArgument):
-        #     return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
+        elif isinstance(error, discord.ext.commands.errors.BadArgument):
+            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
