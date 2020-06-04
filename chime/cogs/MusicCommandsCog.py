@@ -157,9 +157,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
     @commands.command(aliases=["vol"])
     async def volume(self, ctx: Context, volume: int):
-        """Sets the volume of the current track. Valid values: `3` - `100`. Default is 40. For bass-boosting see """ + prefix + """boost"""
-        if volume > 100 or volume < 3:
-            raise BadRequestException("Volume has to be between 3 and 100!")
+        """Sets the volume of the current track. Valid values: `3` - `200`. Default is 40. For bass-boosting see """ + prefix + """boost"""
+        if volume > 200 or volume < 3:
+            raise BadRequestException("Volume has to be between 3 and 200!")
 
         player = self.bot.wavelink.get_player(ctx.guild.id)
         await player.set_volume(volume)
@@ -200,6 +200,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller = self.get_controller(ctx)
 
         if looping_mode in ["off", "track", "queue"]:
+            controller.prev_looping_mode = controller.looping_mode
             if looping_mode == "off":
                 controller.looping_mode = 0
             elif looping_mode == "track":
@@ -215,12 +216,16 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         """Shows the queue."""
         controller = self.get_controller(ctx)
 
-        pagedlist = PagedListEmbed("Queue Current Index: " + str(controller.current_index), [str(index + 1) + ".   **" + song.title + "**" if index == controller.current_index - 1 else str(index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
+        pagedlist = PagedListEmbed("Queue", [str(index + 1) + ".   **" + song.title + "**" if index == controller.current_index - 1 else str(index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
         await pagedlist.send(pagedlist.get())
 
     @commands.command()
     async def clear(self, ctx):
         """Clears the queue."""
+        controller = self.get_controller(ctx)
+        controller.queue = []
+        controller.current_index = 0
+        await ctx.message.add_reaction("<:OK:716230152643674132>")
 
     @commands.command()
     async def skip(self, ctx):
@@ -230,13 +235,19 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
 
-        await ctx.send('Skipping the song!', delete_after=15)
+        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        self.get_controller(ctx).current_index += 1
+
         await player.stop()
 
     @commands.command(aliases=["fastforward", "ff"])
     async def seek(self, ctx, seconds: int = None):
         """Fast-forwards the 15 seconds or a given amount of seconds in the current song."""
 
-    @commands.command()
-    async def jump(self, ctx, position):
+    @commands.command(aliases=["jump", "jumpto"])
+    async def skipto(self, ctx, position):
         """Jumps to the given position in the current queue/playlist."""
+
+    @commands.command()
+    async def debug(self, ctx):
+        await ctx.send(f"Current Queue Index {self.get_controller(ctx).current_index}\nCurrent looping mode: {self.get_controller(ctx).looping_mode}")

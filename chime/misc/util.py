@@ -4,10 +4,12 @@ import re
 from logging.handlers import RotatingFileHandler
 
 from discord import Message
+from github.Issue import Issue
+from github.Repository import Repository
 from google.cloud.firestore_v1 import Client
-from google.cloud.firestore_v1.proto.document_pb2 import Document
 from wavelink import Track
 
+from chime.main import report_issues
 from chime.misc.StyledEmbed import StyledEmbed
 
 url_regex = re.compile(
@@ -38,6 +40,13 @@ def get_token(start_dev: bool) -> str:
     if start_dev:
         return section["token-dev"]
     return section['token']
+
+
+def get_github_token() -> str:
+    config = configparser.ConfigParser()
+    config.read("../secret/token.ini")
+    section = config['token']
+    return section['github-access-token']
 
 
 def check_if_url(url: str) -> bool:
@@ -94,3 +103,14 @@ def check_if_playlist_exists(db: Client, name: str, user: int):
     if doc.exists:
         return True
     return False
+
+
+def send_github_comment(issue_id: int, content: str):
+    if report_issues:
+        from github import Github
+        from chime.main import repo_name
+
+        g = Github(get_github_token())
+        repo: Repository = g.get_user().get_repo(repo_name)
+        issue: Issue = repo.get_issue(issue_id)
+        issue.create_comment(content)
