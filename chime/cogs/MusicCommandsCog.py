@@ -1,6 +1,8 @@
+import datetime
 from typing import List, Union
 
 import discord
+import humanize
 import wavelink
 from discord import Message
 from discord.ext import commands
@@ -13,7 +15,7 @@ from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.SongSelector import SongSelector
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import check_if_url, get_currently_playing_embed
+from chime.misc.util import check_if_url, get_currently_playing_embed, search_song
 
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):
@@ -86,42 +88,30 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     async def play(self, ctx, *, query: str):
         """Searches for the search term on youtube or plays from the given URL. When `liked` is passed as the only argument, the bot plays your liked songs"""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
-        if query == "^":  # set the query to the previous message
-            x = await ctx.channel.history(limit=2).flatten()
-            query = x[1].content
-            print(query)
-        if check_if_url(query):  # user provided an URL, play that
-            if not player.is_connected:
-                await ctx.invoke(self.join)  # Join channel if not connected
-            tracks = await self.bot.wavelink.get_tracks(query)
-            if isinstance(tracks, TrackPlaylist):
-                tracks = tracks.tracks
-                await ctx.send(embed=StyledEmbed(description=f"**Added** {len(tracks)} **tracks to queue.**"))
-            else:
-                await ctx.send(embed=StyledEmbed(description=f"**Added** {tracks[0]} **to queue.**"))
-            controller = self.get_controller(ctx)
-            for track in tracks:
-                controller.queue.append(track)
-            return
-        else:  # user didn't provide an URL so search for the entered term
-            i = 0
-            tracks = False
-            while not tracks and i < 5:  # try to find song 5 times
-                print("searching :peepodetective:")
-                tracks: List[Track] = await self.bot.wavelink.get_tracks(f'ytsearch:{query}')
-                i += 1
-        if not tracks:
-            raise BadRequestException('Could not find any songs with that query.')
 
         async def success_callback(track_, last_msg: Message):
             await last_msg.clear_reactions()
             await last_msg.edit(embed=StyledEmbed(description=f"**Added** {track_} **to queue.**"), delete_after=10.0)
             if not player.is_connected:
-                await ctx.invoke(self.join)
-            controller_ = self.get_controller(ctx)
-            controller_.queue.append(track_)
-        songselector = SongSelector(tracks, self.bot, success_callback, ctx)
-        await songselector.send(songselector.get())
+                await ctx.invoke(self.join)  # Join channel if not connected
+            self.get_controller(ctx).queue.append(track_)
+
+        async def success_callback_url(tracks):
+            if not player.is_connected:
+                await ctx.invoke(self.join)  # Join channel if not connected
+
+            if isinstance(tracks, TrackPlaylist):
+                tracks = tracks.tracks
+                await ctx.send(embed=StyledEmbed(description=f"**Added** {len(tracks)} **tracks to queue.**"))
+            else:
+                try:
+                    await ctx.send(embed=StyledEmbed(description=f"**Added** {tracks[0]} **to queue.**"))
+                except TypeError:
+                    raise BadRequestException("Couldn't add this item to the queue!")
+            for track in tracks:
+                self.get_controller(ctx).queue.append(track)
+
+        await search_song(query, ctx, self.bot, success_callback, success_callback_url)
 
     @commands.command(aliases=["stop"])
     async def pause(self, ctx):
@@ -144,7 +134,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException("Currently, no track is loaded/paused")
 
     @commands.command(aliases=["vol"])
-    async def volume(self, ctx: Context, volume: int):
+    async def volume(self, ctx: Context, volume: int):  # TODO premium only, setting the volume is an expensive operation
         """Sets the volume of the current track. Valid values: `3` - `200`. Default is 40. For bass-boosting see """ + prefix + """boost"""
         if volume > 200 or volume < 3:
             raise BadRequestException("Volume has to be between 3 and 200!")
@@ -166,8 +156,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await player.disconnect()
         await ctx.message.add_reaction("👋")
 
-    @commands.command(aliases=["nowplaying", "now", "playing", "song"])
-    async def current(self, ctx):
+    @commands.command(aliases=["nowplaying", "now", "current", "song"])
+    async def playing(self, ctx):
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
@@ -215,11 +205,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     async def skip(self, ctx):
         """Skips the current song."""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
-        track: Track = player.current
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
-
-        await player.seek(track.length)  # Skip to the end of our song and have our trackEnd event handle the rest!
+        await player.stop()
         await ctx.message.add_reaction("<:OK:716230152643674132>")
 
 
@@ -230,6 +218,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
+        if player.current.is_stream:
+            raise BadRequestException('You can\'t use seek in a stream!')
+
         await player.seek(player.position + seconds * 1000)
         await ctx.message.add_reaction("<:OK:716230152643674132>")
 
@@ -242,6 +233,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException('I am currently not playing anything!')
         if seconds < 0:
             raise BadRequestException('I can\'t start that song from the past, fam! Enter a value equal to or greater than 0.')
+        if player.current.is_stream:
+            raise BadRequestException('You can\'t use seekto in a stream!')
 
         await player.seek(seconds * 1000)
         await ctx.message.add_reaction("<:OK:716230152643674132>")
@@ -262,3 +255,32 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             await ctx.message.add_reaction("<:OK:716230152643674132>")  # gib ok
         except IndexError:
             raise BadRequestException("The index I should jump to isn't part of the queue. Try to enter something lower.")
+
+    @commands.command()
+    async def debug(self, ctx):
+        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+        my_track: Track = player.current
+        await ctx.send(my_track.id)
+        await ctx.send(my_track.identifier)
+
+    @commands.command()
+    async def info(self, ctx):
+        """Retrieve various Node/Server/Player information."""
+        player = self.bot.wavelink.get_player(ctx.guild.id)
+        node = player.node
+
+        used = humanize.naturalsize(node.stats.memory_used)
+        total = humanize.naturalsize(node.stats.memory_allocated)
+        free = humanize.naturalsize(node.stats.memory_free)
+        cpu = node.stats.cpu_cores
+
+        fmt = f'**WaveLink:** `{wavelink.__version__}`\n\n' \
+              f'Connected to `{len(self.bot.wavelink.nodes)}` nodes.\n' \
+              f'Best available Node `{self.bot.wavelink.get_best_node().__repr__()}`\n' \
+              f'`{len(self.bot.wavelink.players)}` players are distributed on nodes.\n' \
+              f'`{node.stats.players}` players are distributed on server.\n' \
+              f'`{node.stats.playing_players}` players are playing on server.\n\n' \
+              f'Server Memory: `{used}/{total}` | `({free} free)`\n' \
+              f'Server CPU: `{cpu}`\n\n' \
+              f'Server Uptime: `{datetime.timedelta(milliseconds=node.stats.uptime)}`'
+        await ctx.send(fmt)

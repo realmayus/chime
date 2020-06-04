@@ -45,12 +45,16 @@ class PagedListEmbed:
         self.current_page -= 1
         return self.get()
 
+    def set_page(self, page) -> Embed:
+        self.current_page = page
+        return self.get()
+
     @staticmethod
     async def react_with_pagination_emoji(msg: Message):
         await msg.add_reaction("◀️")
         await msg.add_reaction("▶️")
 
-    async def send(self, embed: Embed, msg_to_edit: Message = None) -> None:
+    async def send(self, embed: Embed, msg_to_edit: Message = None) -> Message:
         if msg_to_edit is not None:
             await msg_to_edit.edit(embed=embed)
             msg = msg_to_edit
@@ -75,6 +79,7 @@ class PagedListEmbed:
                 await msg.remove_reaction("◀️", user)
                 if len(self.contents) + (self.current_page * self.show_per_page) > self.show_per_page:
                     await self.send(self.previous(), msg)
+        return msg
 
 
     def check_reaction(self, reaction: RawReactionActionEvent):

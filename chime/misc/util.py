@@ -2,14 +2,16 @@ import configparser
 import logging
 import re
 from logging.handlers import RotatingFileHandler
+from typing import List
 
 from discord import Message
 from github.Issue import Issue
 from github.Repository import Repository
-from google.cloud.firestore_v1 import Client
-from wavelink import Track
+from google.cloud.firestore_v1 import Client, DocumentReference, DocumentSnapshot
+from wavelink import Track, TrackPlaylist
 
 from chime.main import report_issues
+from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
 
 url_regex = re.compile(
@@ -97,12 +99,18 @@ def get_currently_playing_embed(current_track: Track):
     return currently_playing_embed
 
 
-def check_if_playlist_exists(db: Client, name: str, user: int):
-    doc_ref = db.collection(str(user)).document(str(name))
-    doc = doc_ref.get()
-    if doc.exists:
-        return True
-    return False
+def check_if_playlist_exists(profile: DocumentReference, name: str):
+    data_snapshot: DocumentSnapshot = profile.get()
+    data: dict = data_snapshot.to_dict()
+    if "playlists" in data.keys():
+        playlists: list = data["playlists"]
+        playlist: dict
+        for playlist in playlists:
+            if playlist["name"] == name:
+                return playlist["ref"]
+        return False
+    else:
+        return False
 
 
 def send_github_comment(issue_id: int, content: str):
@@ -114,3 +122,27 @@ def send_github_comment(issue_id: int, content: str):
         repo: Repository = g.get_user().get_repo(repo_name)
         issue: Issue = repo.get_issue(issue_id)
         issue.create_comment(content)
+
+
+async def search_song(query, ctx, bot, success_callback, success_callback_url):
+    from chime.misc.SongSelector import SongSelector
+
+    if query == "^":  # set the query to the previous message
+        x = await ctx.channel.history(limit=2).flatten()
+        query = x[1].content
+        print(query)
+    if check_if_url(query):  # user provided an URL, play that
+        tracks = await bot.wavelink.get_tracks(query)
+        await success_callback_url(tracks)
+        return
+    else:  # user didn't provide an URL so search for the entered term
+        i = 0
+        tracks = False
+        while not tracks and i < 5:  # try to find song 5 times
+            tracks: List[Track] = await bot.wavelink.get_tracks(f'ytsearch:{query}')
+            i += 1
+    if not tracks:
+        raise BadRequestException('Could not find any songs with that query.')
+
+    songselector = SongSelector(tracks, bot, success_callback, ctx)
+    await songselector.send(songselector.get())
