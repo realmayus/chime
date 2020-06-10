@@ -8,7 +8,7 @@ from discord.ext import commands
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
-logger = None
+logger
 
 
 def init_logger():
@@ -25,8 +25,6 @@ def init_logger():
 
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
-
-# TODO per-server prefix (see ?tag server prefix on d.py server)
 
 
 report_issues = False  # Only turn this off while developing!
