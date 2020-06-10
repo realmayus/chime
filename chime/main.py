@@ -1,6 +1,6 @@
 import logging
 import time
-from .misc.logger import init_logger
+from misc.logger import init_logger
 from discord.ext import commands
 
 print("test1")
