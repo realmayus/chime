@@ -1,6 +1,6 @@
 import logging
 import time
-from misc.logger import init_logger
+from chime.misc.logger import init_logger
 from discord.ext import commands
 
 print("test1")
@@ -10,8 +10,6 @@ start_dev = True
 
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
-
-logger = None
 
 report_issues = False  # Only turn this off while developing!
 # When someone submits an urgent error report, send the report to these users' discord accounts
@@ -33,6 +31,7 @@ def start():
     print("test3")
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()
+    logger = logging.getLogger("chime")
     logger.info("Starting chime v." + version + "…")
     print("Starting chime v." + version + "…")
     bot.add_cog(MusicCommandsCog(bot))
@@ -45,10 +44,7 @@ def start():
     bot.run(get_token(start_dev))
 
 
-if __name__ == "__main__":
-    print("test2")
-    logger = logging.getLogger("chime")
-    print(logger)
-    init_logger(logger)
-    print(logger)
+def start_wrapper():
+    __logger__ = logging.getLogger("chime")
+    init_logger(__logger__)
     start()
