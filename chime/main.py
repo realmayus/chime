@@ -8,7 +8,7 @@ from discord.ext import commands
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
-logger = logging.getLogger()
+logger = logging.getLogger("chime")
 
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
