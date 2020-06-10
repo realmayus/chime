@@ -1,6 +1,5 @@
 import logging
 import time
-from logging.handlers import RotatingFileHandler
 from chime.misc.logger import init_logger
 from discord.ext import commands
 
@@ -8,7 +7,6 @@ from discord.ext import commands
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
-logger = logging.getLogger("chime")
 
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
@@ -31,7 +29,6 @@ def start():
     from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
     from chime.misc.util import get_token
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
-
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()
     logger.info("Starting chime v." + version + "…")
@@ -47,5 +44,6 @@ def start():
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("chime")
     init_logger(logger)
     start()
