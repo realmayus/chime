@@ -11,6 +11,7 @@ start_dev = True
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
 
+logger = None
 
 report_issues = False  # Only turn this off while developing!
 # When someone submits an urgent error report, send the report to these users' discord accounts
@@ -44,11 +45,11 @@ def start():
     bot.run(get_token(start_dev))
 
 
-if __name__ == "__main__":
+def start_wrapper():
+    global logger
     print("test2")
     logger = logging.getLogger("chime")
     print(logger)
     init_logger(logger)
     print(logger)
-
     start()

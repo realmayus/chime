@@ -29,7 +29,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "chime=chime.main:start"
+            "chime=chime.main:start_wrapper"
         ]
     }
 )
