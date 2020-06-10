@@ -45,5 +45,8 @@ def start():
 
 if __name__ == "__main__":
     logger = logging.getLogger("chime")
+    print(logger)
     init_logger(logger)
+    print(logger)
+
     start()
