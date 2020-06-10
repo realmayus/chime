@@ -45,8 +45,7 @@ def start():
     bot.run(get_token(start_dev))
 
 
-def start_wrapper():
-    global logger
+if __name__ == "__main__":
     print("test2")
     logger = logging.getLogger("chime")
     print(logger)
