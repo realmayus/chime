@@ -8,7 +8,16 @@ from discord.ext import commands
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
-logger = None
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
+log_file = '../../log.txt'
+my_handler = RotatingFileHandler(filename=log_file, mode='w', maxBytes=5 * 1024 * 1024, backupCount=2,
+                                 encoding=None, delay=0)
+my_handler.setFormatter(log_formatter)
+my_handler.setLevel(logging.INFO)
+logger = logging.getLogger("chime")
+logger.setLevel(logging.INFO)
+logger.addHandler(my_handler)
+
 version = "1.0.0"
 prefix = "*" if start_dev else "$"
 
@@ -47,19 +56,5 @@ def start():
     bot.run(get_token(start_dev))
 
 
-def init_logger() -> logging.Logger:
-    log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
-    log_file = '../../log.txt'
-    my_handler = RotatingFileHandler(filename=log_file, mode='w', maxBytes=5 * 1024 * 1024, backupCount=2,
-                                     encoding=None, delay=0)
-    my_handler.setFormatter(log_formatter)
-    my_handler.setLevel(logging.INFO)
-    logger = logging.getLogger("chime")
-    logger.setLevel(logging.INFO)
-    logger.addHandler(my_handler)
-    return logger
-
-
 if __name__ == "__main__":
-    logger = init_logger()
     start()
