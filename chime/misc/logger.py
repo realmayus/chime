@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 
 def init_logger(logger):
+    print("Hello World")
     print(logger)
     log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
     log_file = 'log.txt'
