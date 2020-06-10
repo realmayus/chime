@@ -1,14 +1,16 @@
 import asyncio
+import datetime
 import sys
+import time
 import traceback
 
+import humanize
 from discord import RawReactionActionEvent, Message
 from discord.ext import commands
 from discord.ext.commands import Bot, BucketType
 
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
-from github import Github
 from chime.main import user_feedback_issue, user_issues_issue
 
 from chime.misc.util import send_github_comment
@@ -17,8 +19,6 @@ from chime.misc.util import send_github_comment
 class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot: Bot = bot
-
-        self.github_client = Github("")
 
     @commands.command(hidden=True)
     async def shutdown(self, ctx):
@@ -103,5 +103,29 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
                                             "User submitted feedback with the following contents: \n\n" + description.content)
                         await ctx.channel.send("Thanks for the report and for making chime better! The feedback was sent to the developers.")
 
+    @commands.command()
+    async def stats(self, ctx):
+        """Shows useful information about the current node your chime player is connected to. Useful for troubleshooting."""
+        player = self.bot.wavelink.get_player(ctx.guild.id)
+        node = player.node
 
+        used = humanize.naturalsize(node.stats.memory_used)
+        total = humanize.naturalsize(node.stats.memory_allocated)
+        cpu = node.stats.cpu_cores
+
+        embed = StyledEmbed(title="chime stats")
+        embed.description = f'Connected to `{len(self.bot.wavelink.nodes)}` nodes.\n' \
+                            f'Best available node: `{self.bot.wavelink.get_best_node().__repr__()}`\n'
+        embed.add_field(name="Players distributed on nodes", value=f"`{str(len(self.bot.wavelink.players))}`")
+        embed.add_field(name="Players distributed on server", value=f"`{str(node.stats.players)}`")
+        embed.add_field(name="Players playing on server", value=f"`{str(node.stats.playing_players)}`")
+        embed.add_field(name="Server RAM", value=f"`{used}/{total}`")
+        embed.add_field(name="Server CPU count", value=f"`{cpu}`")
+        embed.add_field(name="Server uptime", value=f"`{str(datetime.timedelta(seconds=round(node.stats.uptime / 1000)))}`")
+
+        current_time = time.time()
+        difference = int(round(current_time - self.bot.start_time))
+        timestamp = str(datetime.timedelta(seconds=difference))
+        embed.add_field(name="Bot uptime", value=f"`{timestamp}`")
+        await ctx.send(embed=embed)
 

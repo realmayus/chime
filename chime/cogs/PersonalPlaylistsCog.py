@@ -1,23 +1,22 @@
 import uuid
-from typing import List
+from typing import List, Union
 
 import google
+import wavelink
 from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1 import Client, DocumentReference
-from google.cloud.firestore_v1.proto.document_pb2 import Document
-from wavelink import Track, Player, TrackPlaylist
+from wavelink import Player, TrackPlaylist, BuildTrackError
 
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
+from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
-from chime.misc.SongSelector import SongSelector
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import check_if_playlist_exists, check_if_url, search_song
-import chime
+from chime.misc.util import check_if_playlist_exists, search_song
 
 
 class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
@@ -30,7 +29,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
     @commands.command()
     async def playlists(self, ctx: Context):
         """Shows a list of all your playlists"""
-        docs = self.db.collection(str(ctx.author.id)).stream()
+        docs = self.db.collection(str(ctx.author.id)).stream()  # TODO fix this command!
         await ctx.send(embed=StyledEmbed(title="Your playlists", description=f"Use the `{prefix}playlist` command for creating new playlists, viewing them and much more! \n\n" + "\n".join([f"•  **{playlist.id}**  ({len(playlist.to_dict()['contents'])} songs)" for playlist in docs])))
 
     @commands.command(usage="playlist [action] [playlist_name]")
@@ -76,6 +75,43 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                     raise BadRequestException(f"No playlist with the name {playlist} exists!")
             else:
                 raise BadRequestException(f"No playlist with the name {playlist} exists!")
+        elif action == "play":
+            profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
+            x = check_if_playlist_exists(profile, playlist)
+            if x is not False:
+                playlist_doc: DocumentReference = self.db.collection(str(ctx.author.id)).document(x)
+                if playlist_doc is not None:
+                    playlist_data_raw = playlist_doc.get()
+                    playlist_data: dict = playlist_data_raw.to_dict()
+                    if "contents" in playlist_data.keys():
+                        contents = playlist_data["contents"]
+                        await self.join_channel(ctx)
+                        if len(contents) == 0:
+                            raise BadRequestException("Playlist is empty!")
+
+                        index = 0
+                        last_added_track = None
+                        failed = 0
+                        for index, song_data_raw in enumerate(contents):
+                            try:
+                                track = await self.bot.wavelink.build_track(song_data_raw["data"])
+                                last_added_track = track
+                                controller = self.get_controller(ctx)
+                                controller.queue.append(track)
+                            except BuildTrackError:
+                                failed += 1
+                                print("Failed to reconstruct track with data " + song_data_raw["data"])
+                        await ctx.send(embed=StyledEmbed(description=f"**Added** {index} **tracks to queue**" if index > 1 else f"**Added** {last_added_track} **to queue.**"))
+                        if failed > 0:
+                            raise BadRequestException(f"**Failed to add** {failed} **tracks**!")
+                    else:
+                        raise BadRequestException(f"Could not load playlist {playlist}!")
+                else:
+                    raise BadRequestException(f"No playlist with the name {playlist} exists!")
+            else:
+                raise BadRequestException(f"No playlist with the name {playlist} exists!")
+
+
 
         else:
             raise BadRequestException("This action does not exist. Valid actions are: `create`, `show`, `play`, `delete` and `link`.")
@@ -97,7 +133,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
 
         async def success_callback(track_, last_msg: Message):
             await last_msg.clear_reactions()
-            await last_msg.edit(embed=StyledEmbed(description=f"**Added** {track_} **to queue.**"), delete_after=10.0)
+            await last_msg.edit(embed=StyledEmbed(description=f"**Added** {track_} **to playlist {playlist}.**"), delete_after=10.0)
             print(track_)
             tracks_to_add.append(track_)
 
@@ -105,10 +141,10 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             nonlocal tracks_to_add
             if isinstance(tracks, TrackPlaylist):
                 tracks = tracks.tracks
-                await ctx.send(embed=StyledEmbed(description=f"**Added** {len(tracks)} **tracks to queue.**"))
+                await ctx.send(embed=StyledEmbed(description=f"**Added** {len(tracks)} **tracks to playlist {playlist}.**"), delete_after=10.0)
             else:
                 try:
-                    await ctx.send(embed=StyledEmbed(description=f"**Added** {tracks[0]} **to queue.**"))
+                    await ctx.send(embed=StyledEmbed(description=f"**Added** {tracks[0]} **to playlist {playlist}.**"), delete_after=10.0)
                 except TypeError:
                     raise BadRequestException("Couldn't add this item to the queue!")
             tracks_to_add = tracks
@@ -135,3 +171,27 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
     @commands.command(usage="remove [playlist] <search term>")
     async def remove(self, ctx: Context, playlist: str, search_term: str = None):
         """Removes the current song or a song from a search term from the given playlist"""
+
+
+    def get_controller(self, value: Union[commands.Context, wavelink.Player]):
+        """Return the given guild's instance of the MusicController"""
+        if isinstance(value, commands.Context):
+            gid = value.guild.id
+        else:
+            gid = value.guild_id
+        try:
+            controller = self.bot.controllers[gid]
+        except KeyError:
+            controller = MusicController(self.bot, gid)
+            self.bot.controllers[gid] = controller
+        return controller
+
+    async def join_channel(self, ctx):
+        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+        try:
+            if player.channel_id != ctx.author.voice.channel.id:
+                await player.connect(ctx.author.voice.channel.id)
+            controller = self.get_controller(ctx)
+            controller.channel = ctx.channel
+        except AttributeError:
+            raise BadRequestException("You are not connected to a voice channel.")

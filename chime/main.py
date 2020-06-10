@@ -1,3 +1,5 @@
+import time
+
 from discord.ext import commands
 
 
@@ -30,6 +32,7 @@ def start():
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
 
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
+    bot.start_time = time.time()
     logger.info("Starting chime v." + version + "…")
     print("Starting chime v." + version + "…")
     bot.add_cog(MusicCommandsCog(bot))

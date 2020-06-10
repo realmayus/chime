@@ -39,7 +39,6 @@ class MusicController:
 
             # Remove the internal flag of our event (see docs of asyncio.Event for more info)
             self.next.clear()
-
             if self.looping_mode == 0:
                 """Looping is turned off, just play the next song in the queue if available"""
                 if len(self.queue) - 1 >= self.current_index:  # check if has next

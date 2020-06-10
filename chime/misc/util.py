@@ -102,13 +102,16 @@ def get_currently_playing_embed(current_track: Track):
 def check_if_playlist_exists(profile: DocumentReference, name: str):
     data_snapshot: DocumentSnapshot = profile.get()
     data: dict = data_snapshot.to_dict()
-    if "playlists" in data.keys():
-        playlists: list = data["playlists"]
-        playlist: dict
-        for playlist in playlists:
-            if playlist["name"] == name:
-                return playlist["ref"]
-        return False
+    if data is not None:
+        if "playlists" in data.keys():
+            playlists: list = data["playlists"]
+            playlist: dict
+            for playlist in playlists:
+                if playlist["name"] == name:
+                    return playlist["ref"]
+            return False
+        else:
+            return False
     else:
         return False
 

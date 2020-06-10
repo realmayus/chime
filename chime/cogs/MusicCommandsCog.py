@@ -1,4 +1,5 @@
 import datetime
+import time
 from typing import List, Union
 
 import discord
@@ -25,7 +26,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
         self.bot.loop.create_task(self.start_nodes())
 
-        self.controllers = {}
+        self.bot.controllers = {}
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
@@ -47,7 +48,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
     async def on_event_hook(self, event):
         """Catch wavelink events here"""
-        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):  # When track has ended or an exception occurred
+        if isinstance(event,
+                      (wavelink.TrackEnd, wavelink.TrackException)):  # When track has ended or an exception occurred
             controller = self.get_controller(event.player)
             controller.next.set()  # Set the internal flag on the asyncio event
 
@@ -58,10 +60,10 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         else:
             gid = value.guild_id
         try:
-            controller = self.controllers[gid]
+            controller = self.bot.controllers[gid]
         except KeyError:
             controller = MusicController(self.bot, gid)
-            self.controllers[gid] = controller
+            self.bot.controllers[gid] = controller
         return controller
 
     @commands.command()
@@ -71,8 +73,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
     async def join_(self, ctx, channel=None, suppress_warning=False):
         if not channel:
-            channel = ctx.author.voice.channel
-            if channel is None:
+            try:
+                channel = ctx.author.voice.channel
+            except AttributeError:
                 raise BadRequestException('No channel to join. Please join one.')
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
         if player.channel_id == channel.id:
@@ -119,7 +122,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if player.is_playing and not player.is_paused:
             await player.set_pause(True)
-            await ctx.send(embed=StyledEmbed(description=f"Stopped song! Use `{prefix}resume` to resume it."), delete_after=20.0)
+            await ctx.send(embed=StyledEmbed(description=f"Stopped song! Use `{prefix}resume` to resume it."),
+                           delete_after=20.0)
         else:
             raise BadRequestException("I am currently not playing any track!")
 
@@ -134,7 +138,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException("Currently, no track is loaded/paused")
 
     @commands.command(aliases=["vol"])
-    async def volume(self, ctx: Context, volume: int):  # TODO premium only, setting the volume is an expensive operation
+    async def volume(self, ctx: Context,
+                     volume: int):  # TODO premium only, setting the volume is an expensive operation
         """Sets the volume of the current track. Valid values: `3` - `200`. Default is 40. For bass-boosting see """ + prefix + """boost"""
         if volume > 200 or volume < 3:
             raise BadRequestException("Volume has to be between 3 and 200!")
@@ -148,7 +153,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         """Leaves the current channel."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
         try:
-            del self.controllers[ctx.guild.id]
+            del self.bot.controllers[ctx.guild.id]
         except Exception:
             await player.disconnect()
             raise BadRequestException("I am not connected to a voice channel!")
@@ -163,8 +168,10 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException('I am currently not playing anything!')
 
         controller = self.get_controller(ctx)
-        await controller.now_playing.delete()
-
+        try:
+            await controller.now_playing.delete()
+        except AttributeError:
+            pass
         controller.now_playing_msg = await ctx.send(embed=get_currently_playing_embed(player.current))
 
     @commands.command(aliases=["repeat"])
@@ -190,7 +197,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller = self.get_controller(ctx)
         if len(controller.queue) == 0:
             raise BadRequestException("Queue is empty!")
-        pagedlist = PagedListEmbed("Queue", [str(index + 1) + ".   **" + song.title + "**" if index == controller.current_index - 1 else str(index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
+        pagedlist = PagedListEmbed("Queue", [
+            str(index + 1) + ".   **" + song.title + "**" if index == controller.current_index - 1 else str(
+                index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
         await pagedlist.send(pagedlist.get())
 
     @commands.command()
@@ -209,7 +218,6 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException('I am currently not playing anything!')
         await player.stop()
         await ctx.message.add_reaction("<:OK:716230152643674132>")
-
 
     @commands.command(aliases=["fastforward", "ff"])
     async def seek(self, ctx, seconds: int = 15):
@@ -232,7 +240,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
         if seconds < 0:
-            raise BadRequestException('I can\'t start that song from the past, fam! Enter a value equal to or greater than 0.')
+            raise BadRequestException(
+                'I can\'t start that song from the past, fam! Enter a value equal to or greater than 0.')
         if player.current.is_stream:
             raise BadRequestException('You can\'t use seekto in a stream!')
 
@@ -254,7 +263,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 await player.seek(player.current.length)  # If a song is currently playing, skip that!
             await ctx.message.add_reaction("<:OK:716230152643674132>")  # gib ok
         except IndexError:
-            raise BadRequestException("The index I should jump to isn't part of the queue. Try to enter something lower.")
+            raise BadRequestException(
+                "The index I should jump to isn't part of the queue. Try to enter something lower.")
 
     @commands.command()
     async def debug(self, ctx):
@@ -262,25 +272,3 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         my_track: Track = player.current
         await ctx.send(my_track.id)
         await ctx.send(my_track.identifier)
-
-    @commands.command()
-    async def info(self, ctx):
-        """Retrieve various Node/Server/Player information."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        node = player.node
-
-        used = humanize.naturalsize(node.stats.memory_used)
-        total = humanize.naturalsize(node.stats.memory_allocated)
-        free = humanize.naturalsize(node.stats.memory_free)
-        cpu = node.stats.cpu_cores
-
-        fmt = f'**WaveLink:** `{wavelink.__version__}`\n\n' \
-              f'Connected to `{len(self.bot.wavelink.nodes)}` nodes.\n' \
-              f'Best available Node `{self.bot.wavelink.get_best_node().__repr__()}`\n' \
-              f'`{len(self.bot.wavelink.players)}` players are distributed on nodes.\n' \
-              f'`{node.stats.players}` players are distributed on server.\n' \
-              f'`{node.stats.playing_players}` players are playing on server.\n\n' \
-              f'Server Memory: `{used}/{total}` | `({free} free)`\n' \
-              f'Server CPU: `{cpu}`\n\n' \
-              f'Server Uptime: `{datetime.timedelta(milliseconds=node.stats.uptime)}`'
-        await ctx.send(fmt)
