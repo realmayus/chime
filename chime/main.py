@@ -3,7 +3,7 @@ import time
 from chime.misc.logger import init_logger
 from discord.ext import commands
 
-
+print("test1")
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
@@ -29,6 +29,7 @@ def start():
     from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
     from chime.misc.util import get_token
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
+    print("test3")
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()
     logger.info("Starting chime v." + version + "…")
@@ -44,6 +45,7 @@ def start():
 
 
 if __name__ == "__main__":
+    print("test2")
     logger = logging.getLogger("chime")
     print(logger)
     init_logger(logger)
