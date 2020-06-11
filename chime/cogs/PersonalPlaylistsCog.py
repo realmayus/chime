@@ -22,7 +22,7 @@ from chime.misc.util import check_if_playlist_exists, search_song
 class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
     def __init__(self, bot):
         self.bot = bot
-        cred = credentials.Certificate("../secret/firebase_creds.json")
+        cred = credentials.Certificate("secret/")
         firebase_admin.initialize_app(cred)
         self.db: Client = firestore.client()
 

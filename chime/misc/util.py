@@ -23,12 +23,9 @@ url_regex = re.compile(
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
-
-
-
 def get_token(start_dev: bool) -> str:
     config = configparser.ConfigParser()
-    config.read("../secret/token.ini")
+    config.read("secret/token.ini")
     section = config['token']
     if start_dev:
         return section["token-dev"]
@@ -37,7 +34,7 @@ def get_token(start_dev: bool) -> str:
 
 def get_github_token() -> str:
     config = configparser.ConfigParser()
-    config.read("../secret/token.ini")
+    config.read("secret/token.ini")
     section = config['token']
     return section['github-access-token']
 
