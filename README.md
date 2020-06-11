@@ -52,5 +52,9 @@ Every time you have changed any file, you have to update the chime binary so tha
 To do that, enter your virtual environment using `source venv/bin/activate` and run:
 `python3 -m pip install .`
 
+##### Updating chime itself
+If new commits were commited and you want to update chime, simply execute `git pull` in the root directory of chime and then update the chime binary.
+
+
 #### Asset Credits
 Music Disc with Note: Icon made by Freepik from www.flaticon.com
