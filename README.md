@@ -45,8 +45,12 @@ token = YOUR_PRIMARY_TOKEN
 
 If you want to set up automated bug reporting on github, enter a third token with the key `github-access-token` and your github access token as the value. Make sure to enable automated error reporting and set the repository URLs in main.py. 
 
-After you've changed anything, run `python3 -m pip install .` in chime's root directory to update the chime binary.
+You have to update the chime binary after changing anything:
 
+##### Updating the chime binary
+Every time you have changed any file, you have to update the chime binary so that your OS always loads the most recent version when you run `chime`.
+To do that, enter your virtual environment using `source venv/bin/activate` and run:
+`python3 -m pip install .`
 
 #### Asset Credits
 Music Disc with Note: Icon made by Freepik from www.flaticon.com
