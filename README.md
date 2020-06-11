@@ -4,6 +4,8 @@
 #### Get Started
 Don't want to host it on your own? You can invite a hosted version of chime by clicking [here](https://discord.com/api/oauth2/authorize?client_id=716032601646694531&permissions=37055552&scope=bot)
 
+
+#### Host chime on your own
 _If you however_ want it to host chime on your own, choose one of the two methods to install chime:
 
 ##### 1) Automatic script
