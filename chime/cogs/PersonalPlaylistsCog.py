@@ -37,9 +37,9 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
         else:
             raise BadRequestException(f"You currently don't have any playlists. Create one with `{prefix}playlist create <name>`.")
 
-    @commands.command(usage="playlist [action] [playlist_name]")
+    @commands.command(usage="playlist [action] [playlist_name]", aliases=["pl", "l"])
     async def playlist(self, ctx: Context, action: str, playlist: str, *, additional_args=None):
-        """Provide the argument 'create' to create a playlist. Provide 'add' and a search term/URL to add a track to a playlsit Provide the argument 'show' to show the playlist's contents. Provide argument 'play' to play the playlist. Provide argument 'delete' to delete playlist. Provide argument 'link' to get a link to the playlist."""
+        """Provide argument 'list' to list all your playlists. Provide the argument 'create' to create a playlist. Provide 'add' and a search term/URL to add a track to a playlsit Provide the argument 'show' to show the playlist's contents. Provide argument 'play' to play the playlist. Provide argument 'delete' to delete playlist. Provide argument 'link' to get a link to the playlist."""
         if action == "create":
             if not additional_args:  # if the playlist name contained spaces, the individual parts would be in additional_args
                 profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
@@ -115,6 +115,8 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                     raise BadRequestException(f"No playlist with the name {playlist} exists!")
             else:
                 raise BadRequestException(f"No playlist with the name {playlist} exists!")
+        elif action == "list":
+            await ctx.invoke(self.playlists)
         elif action == "add":
             tracks_to_add = []
 
@@ -162,7 +164,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             else:
                 raise BadRequestException("No track selected!")
         else:
-            raise BadRequestException("This action does not exist. Valid actions are: `create`, `add`, `show`, `play`, `delete` and `link`.")
+            raise BadRequestException("This action does not exist. Valid actions are: `create`, `list`, `add`, `show`, `play`, `delete` and `link`.")
 
     @commands.command()
     async def like(self):
