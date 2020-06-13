@@ -107,7 +107,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                             except BuildTrackError:
                                 failed += 1
                                 print("Failed to reconstruct track with data " + song_data_raw["data"])
-                        await ctx.send(embed=StyledEmbed(description=f"**Added** {index} **tracks to queue**" if index > 1 else f"**Added** {last_added_track} **to queue.**"))
+                        await ctx.send(embed=StyledEmbed(description=f"**Added** {index + 1} **tracks to queue**" if index > 1 else f"**Added** {last_added_track} **to queue.**"))
                         if failed > 0:
                             raise BadRequestException(f"**Failed to add** {failed} **tracks**!")
                     else:
