@@ -13,6 +13,7 @@ from wavelink import Player, TrackPlaylist, BuildTrackError, Track
 
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
+from chime.misc.CustomCommand import custom_command
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.StyledEmbed import StyledEmbed
@@ -37,9 +38,9 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
         else:
             raise BadRequestException(f"You currently don't have any playlists. Create one with `{prefix}playlist create <name>`.")
 
-    @commands.command(usage="playlist [action] [playlist_name]", aliases=["pl", "l"])
-    async def playlist(self, ctx: Context, action: str, playlist: str, *, additional_args=None):
-        """Provide argument 'list' to list all your playlists. Provide the argument 'create' to create a playlist. Provide 'add' and a search term/URL to add a track to a playlsit Provide the argument 'show' to show the playlist's contents. Provide argument 'play' to play the playlist. Provide argument 'delete' to delete playlist. Provide argument 'link' to get a link to the playlist."""
+    @custom_command(usage="playlist [action] <playlist_name>", aliases=["pl", "l"], available_args=[{"type": "[action]", "args": [{"name": "list", "desc": "List all your playlists."}, {"name": "create", "desc": "Create a playlist."}, {"name": "add", "desc": "Add a song to the given playlist."}, {"name": "show | view", "desc": "List the songs in your playlist."}, {"name": "play", "desc": "Play the playlist."}, {"name": "delete", "desc": "Delete the playlist."}]}])
+    async def playlist(self, ctx: Context, action: str, playlist: str = None, *, additional_args=None):
+        """Manage all your personal playlists. You can also manage them on [chime's web app](https://chime.realmayus.xyz)"""
         if action == "create":
             if not additional_args:  # if the playlist name contained spaces, the individual parts would be in additional_args
                 profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
@@ -57,7 +58,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                 else:
                     raise BadRequestException(f"A playlist with the name `{playlist}` exists already!")
             else:
-                raise BadRequestException("The playlist name must not contain spaces!")
+                raise BadRequestException("If you want spaces in your playlist's name, you have to wrap it in quotation marks!")
         elif action == "show" or action == "view":
             profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
             x = check_if_playlist_exists(profile, playlist)

@@ -34,6 +34,7 @@ class MusicController:
                 """Check if the "currently playing" message is still there, if so, try to delete it :)"""
                 try:
                     await self.now_playing_msg.delete()
+                    self.now_playing_msg = None
                 except discord.errors.NotFound:
                     pass
 
@@ -41,12 +42,20 @@ class MusicController:
             self.next.clear()
             if self.looping_mode == 0:
                 """Looping is turned off, just play the next song in the queue if available"""
-                if len(self.queue) - 1 >= self.current_index:  # check if has next
-                    self.current_index += 1
-                    song = self.queue[self.current_index - 1]
-                else:
+                try:
+                    if len(self.queue) != 0 and len(self.queue) - 1 >= self.current_index:  # check if has next
+                        self.current_index += 1
+                        song = self.queue[self.current_index - 1]
+                    else:
+                        await asyncio.sleep(0)  # We need to yield something here so that the loop doesn't block our code. asyncio is weird, fam
+                        continue  # skip to the next cycle of our `while` loop
+                except IndexError as error:
+                    import traceback
+                    import sys
+                    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
                     await asyncio.sleep(0)  # We need to yield something here so that the loop doesn't block our code. asyncio is weird, fam
-                    continue  # skip to the next cycle of our `while` loop
+                    continue
+
 
             elif self.looping_mode == 1:
                 """Loop the current track"""

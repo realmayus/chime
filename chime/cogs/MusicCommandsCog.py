@@ -5,7 +5,7 @@ from typing import List, Union
 import discord
 import humanize
 import wavelink
-from discord import Message
+from discord import Message, VoiceState, Member, VoiceChannel
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from wavelink import Track, Player, TrackPlaylist
@@ -151,14 +151,15 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     @commands.command(aliases=["quit"])
     async def leave(self, ctx):
         """Leaves the current channel."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
+        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+
         try:
             del self.bot.controllers[ctx.guild.id]
-        except Exception:
-            await player.disconnect()
-            raise BadRequestException("I am not connected to a voice channel!")
-
+        except Exception as e:
+            print(e)
+        await player.stop()
         await player.disconnect()
+
         await ctx.message.add_reaction("👋")
 
     @commands.command(aliases=["nowplaying", "now", "current", "song"])
@@ -214,10 +215,14 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
     async def skip(self, ctx):
         """Skips the current song."""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+        controller = self.get_controller(ctx)
+
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
         await player.stop()
         await ctx.message.add_reaction("<:OK:716230152643674132>")
+        if controller.looping_mode == 1:
+            await ctx.send("You are currently on loop mode: track. Skipping will just replay the song - turn looping off to play the next song in the queue.", delete_after=15)
 
     @commands.command(aliases=["fastforward", "ff"])
     async def seek(self, ctx, seconds: int = 15):
@@ -272,3 +277,27 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         my_track: Track = player.current
         await ctx.send(my_track.id)
         await ctx.send(my_track.identifier)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
+        player: Player = self.bot.wavelink.get_player(member.guild.id)
+        controller: MusicController = self.get_controller(player)
+        if not before.channel:
+            return
+        if before.channel.id == player.channel_id:
+            """It's actually the bot's channel!"""
+            if not after.channel or after.channel != before.channel:
+                """Member has left or switched the channel"""
+                channel: VoiceChannel = before.channel
+                if len(channel.members) <= 1:
+                    embed = StyledEmbed(suppress_tips=True, description="**I left the channel due to inactivity.**")
+                    embed.set_footer(text="Please consider to donate, you'll get some nifty features!")
+                    await controller.channel.send(embed=embed)
+                    try:
+                        controller.task.cancel()
+                        del self.bot.controllers[member.guild.id]
+                        del controller
+                    except Exception as e:
+                        print(e)
+                    await player.stop()
+                    await player.disconnect()

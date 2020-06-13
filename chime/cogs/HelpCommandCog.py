@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Command
 
 from chime.main import prefix
+from chime.misc.CustomCommand import CustomCommand
 from chime.misc.StyledEmbed import StyledEmbed
 
 
@@ -30,8 +31,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" \
                             "Want to support the development of chime while getting exclusive benefits? **[Donate](https://github.com/realmayus/chime)** \n \n" \
                             "**More info and invite link [here](https://github.com/realmayus/chime)** \n\n" \
-                            "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**\n" \
-                            "**Use** `" + self.clean_prefix + "help [category]` **for more info on a category.**"
+                            "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**"
 
         for cog, commands in mapping.items():
             if cog is not None:  # We don't want commands without categories! >:c
@@ -51,26 +51,26 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        embed = StyledEmbed(title='{0.qualified_name}'.format(cog))
-        if cog.description:
-            embed.description = cog.description
+        pass
 
-        filtered = await self.filter_commands(cog.get_commands(), sort=True)
-        for command in filtered:
-            embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...', inline=False)
-
-        await self.get_destination().send(embed=embed)
-
-    async def send_group_help(self, group):
-        embed = StyledEmbed(title=group.qualified_name)
+    async def send_group_help(self, group: CustomCommand):
+        embed = StyledEmbed(title='`' + group.qualified_name + '`')
+        desc = ""
         if group.help:
-            embed.description = group.help
+            desc += group.help
 
-        if isinstance(group, commands.Group):
-            filtered = await self.filter_commands(group.commands, sort=True)
-            for command in filtered:
-                embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...',
-                                inline=False)
+        if group.usage:
+            desc += f"\n\n**Usage**\n`{group.usage}`"
+
+        if group.available_args:
+            desc += "\n\n**Arguments**"
+            for typ in group.available_args:
+                desc += f"\n**_{typ['type']}_**"
+                for arg in typ['args']:
+                    desc += f"\n`{arg['name']}`\n*{arg['desc']}*"
+
+        desc += f"\n\n_Was this helpful?  [**Yup**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1) | [**Nope**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1)_"
+        embed.description = desc
 
         await self.get_destination().send(embed=embed)
 
