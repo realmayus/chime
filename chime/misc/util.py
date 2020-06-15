@@ -5,12 +5,9 @@ from logging.handlers import RotatingFileHandler
 from typing import List
 
 from discord import Message
-from github.Issue import Issue
-from github.Repository import Repository
-from google.cloud.firestore_v1 import Client, DocumentReference, DocumentSnapshot
+from google.cloud.firestore_v1 import  DocumentReference, DocumentSnapshot
 from wavelink import Track, TrackPlaylist
 
-from chime.main import report_issues
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
 
@@ -95,24 +92,13 @@ def check_if_playlist_exists(profile: DocumentReference, name: str):
             playlists: list = data["playlists"]
             playlist: dict
             for playlist in playlists:
-                if playlist["name"] == name:
+                if playlist["name"].lower() == name.lower():
                     return playlist["ref"]
             return False
         else:
             return False
     else:
         return False
-
-
-def send_github_comment(issue_id: int, content: str):
-    if report_issues:
-        from github import Github
-        from chime.main import repo_name
-
-        g = Github(get_github_token())
-        repo: Repository = g.get_user().get_repo(repo_name)
-        issue: Issue = repo.get_issue(issue_id)
-        issue.create_comment(content)
 
 
 async def search_song(query, ctx, bot, success_callback, success_callback_url):

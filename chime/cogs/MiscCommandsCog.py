@@ -1,24 +1,27 @@
 import asyncio
 import datetime
-import sys
+import io
+import random
+import string
 import time
-import traceback
 
+import discord
+from captcha.image import ImageCaptcha
 import humanize
 from discord import RawReactionActionEvent, Message
 from discord.ext import commands
 from discord.ext.commands import Bot, BucketType
 
+from chime.main import report_channel
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.main import user_feedback_issue, user_issues_issue
-
-from chime.misc.util import send_github_comment
 
 
 class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot: Bot = bot
+        self.imageCaptcha = ImageCaptcha(fonts=["./assets/Inter-Medium.ttf"])
+
 
     @commands.command(hidden=True)
     async def shutdown(self, ctx):
@@ -31,7 +34,17 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
         else:
             raise BadRequestException("You don't have sufficient permissions to execute this command.")
 
-    @commands.cooldown(3, 10*60, BucketType.guild)
+    def get_captcha_file(self):
+        solution = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+        data = self.imageCaptcha.generate_image(solution)
+        out = io.BytesIO()
+        data.save(out, format='PNG')
+        out.seek(0)
+        file = discord.File(fp=out, filename="captcha.png")
+        return solution, file
+
+
+    @commands.cooldown(2, 10*60, BucketType.guild)
     @commands.command()
     async def feedback(self, ctx):
         """Gives you options to send feedback or to report bugs"""
@@ -51,11 +64,8 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
         except asyncio.TimeoutError:
             """Handle Timeout"""
         else:
-            print("boop")
             if str(reaction.emoji.name[0]).isdigit() and int(str(reaction.emoji.name)[0]) in range(4):
-                print("peepo")
                 selected_number = int(str(reaction.emoji.name[0]))
-                print(selected_number)
                 what_to_do = None
                 if selected_number == 1:
                     what_to_do = "Send Feedback"
@@ -77,30 +87,58 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
                 except asyncio.TimeoutError:
                     await ctx.channel.send("Aborting feedback wizard because no answer was sent.")
                 else:
+
+                    if description.content == "stop":
+                        await ctx.send("Ok.")
+                        return
+
                     if selected_number == 2 or selected_number == 3:
                         if selected_number == 2:
-                            """Urgent issue, send via discord"""
-                            from chime.main import urgent_notifications
-                            for user_id in urgent_notifications:
+                            """Urgent issue"""
+                            captcha_solved = False
+                            while not captcha_solved:
+                                solution, file = self.get_captcha_file()
+                                embed: StyledEmbed = StyledEmbed(title="Please solve the captcha.", description="Not case sensitive. To quit, enter `stop`, for a new captcha enter `new`")
+                                await ctx.send(file=file, embed=embed)
                                 try:
-                                    user = await self.bot.fetch_user(user_id)
-                                    await user.send(embed=StyledEmbed(title="Urgent issue", description=f"A user has reported an **urgent issue** with chime.\nIssue description: \n```{description.content}```"))
-                                except Exception as e:
-                                    print("Warning: Couldn't send urgent issue report to user with ID " + str(user_id))
-                                    print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-                                    traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+                                    captcha_sol: Message = await self.bot.wait_for('message', timeout=30.0, check=lambda ms: ms.channel == ctx.channel and ms.author == ctx.author)
+                                    captcha_sol: str = captcha_sol.content
+                                except asyncio.TimeoutError:
+                                    await ctx.channel.send("Aborting feedback wizard because no captcha answer was sent.")
+                                else:
+                                    if captcha_sol.lower() == "stop":
+                                        await ctx.send("Ok.")
+                                        return
 
+                                    if captcha_sol.lower().replace("o", "0").replace("7", "1").replace("8", "b") == solution.lower().replace("o", "0").replace("7", "1").replace("8", "b"):
+                                        captcha_solved = True
+
+                            report_channel_ = await self.bot.fetch_channel(report_channel)
+                            error_embed = StyledEmbed(suppress_tips=True,
+                                                      title=f"👥  Outage Report")
+                            error_embed.description = "A user has submitted an outage report:\n\n" + description.content
+                            error_embed.set_author(name="User Report")
+                            await report_channel_.send("<@&718113149651255386>", embed=error_embed)
                             await ctx.channel.send(
-                                "Thanks for the report and for making chime better! A developer will look into the issue" + (
-                                    "." if selected_number == 3 else " as soon as possible."))
+                                "Thanks for the report and for making chime better! A developer will look into the issue as soon as possible.")
                         elif selected_number == 3:
-                            send_github_comment(user_issues_issue, "User submitted issue with the following contents: \n\n" + description.content)
+                            report_channel_ = await self.bot.fetch_channel(report_channel)
+                            error_embed = StyledEmbed(suppress_tips=True,
+                                                      title=f"👥  Bug Report")
+                            error_embed.description = "A user has submitted a bug report:\n\n" + description.content
+                            error_embed.set_author(name="User Report")
+                            await report_channel_.send(embed=error_embed)
                             await ctx.channel.send(
                                 "Thanks for the report and for making chime better! A developer will look into the issue" + (
                                     "." if selected_number == 3 else " as soon as possible."))
+
                     elif selected_number == 1:
-                        send_github_comment(user_feedback_issue,
-                                            "User submitted feedback with the following contents: \n\n" + description.content)
+                        report_channel_ = await self.bot.fetch_channel(report_channel)
+                        error_embed = StyledEmbed(suppress_tips=True,
+                                                  title=f"👥  Feedback")
+                        error_embed.description = "A user has submitted feedback:\n\n" + description.content
+                        error_embed.set_author(name="User Feedback")
+                        await report_channel_.send(embed=error_embed)
                         await ctx.channel.send("Thanks for the report and for making chime better! The feedback was sent to the developers.")
 
     @commands.command()

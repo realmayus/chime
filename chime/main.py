@@ -6,17 +6,10 @@ from discord.ext import commands
 # If activated: Uses the token-dev to minimize downtime while developing
 start_dev = True
 
-
 version = "1.0.0"
-prefix = "*" if start_dev else "$"
+prefix = "$" if start_dev else "*"
 
-report_issues = False  # Only turn this off while developing!
-# When someone submits an urgent error report, send the report to these users' discord accounts
-urgent_notifications = [218444620051251200]
-repo_name = "chime"
-user_feedback_issue = 3  # Those ids are for creating issues when users submit feedback or file bug reports
-auto_issues_issue = 2
-user_issues_issue = 1
+report_channel = 722092978021072896
 
 
 def start():

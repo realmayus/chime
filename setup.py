@@ -15,7 +15,7 @@ setup(
     author_email="realmayus@gmail.com",
     license="GPLv3",
     packages=["chime", "chime.cogs", "chime.misc"],
-    install_requires=["discord", "firebase-admin", "wavelink", "PyGithub", "humanize"],
+    install_requires=["discord", "firebase-admin", "wavelink", "PyGithub", "humanize", "captcha"],
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 3 - Alpha",
