@@ -92,8 +92,9 @@ def check_if_playlist_exists(profile: DocumentReference, name: str):
             playlists: list = data["playlists"]
             playlist: dict
             for playlist in playlists:
-                if playlist["name"].lower() == name.lower():
-                    return playlist["ref"]
+                if playlist["name"]:
+                    if playlist["name"].lower() == name.lower():
+                        return playlist["ref"]
             return False
         else:
             return False
