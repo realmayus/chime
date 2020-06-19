@@ -154,13 +154,13 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
         embed = StyledEmbed(title="chime stats")
         embed.description = f'Connected to {len(self.bot.wavelink.nodes)} node(s).\n' \
                             f'Best available node: **{self.bot.wavelink.get_best_node().__repr__()}**\n'
-        embed.add_field(name="Current stream count", value=f"{str(node.stats.playing_players)}")
+        embed.add_field(name="Stream count", value=f"{str(node.stats.playing_players)}")
+        embed.add_field(name="Server Count", value=f"{len(self.bot.guilds)}")
         embed.add_field(name="Lavalink uptime", value=f"{str(datetime.timedelta(seconds=round(node.stats.uptime / 1000)))}")
 
         current_time = time.time()
         difference = int(round(current_time - self.bot.start_time))
         timestamp = str(datetime.timedelta(seconds=difference))
         embed.add_field(name="Bot uptime", value=f"{timestamp}")
-        embed.add_field(name="Server Count", value=f"{len(self.bot.guilds)}")
         await ctx.send(embed=embed)
 
