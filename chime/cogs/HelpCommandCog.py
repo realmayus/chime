@@ -60,16 +60,28 @@ class EmbedHelpCommand(commands.HelpCommand):
             desc += group.help
 
         if group.usage:
-            desc += f"\n\n**Usage**\n`{group.usage}`"
+            embed.add_field(name="**Usage**", value=f"`{prefix + group.usage}`", inline=False)
 
-        if group.available_args:
-            desc += "\n\n**Arguments**"
+        if group.aliases and len(group.aliases) > 0:
+            embed.add_field(name="**Aliases**", value=' '.join([f"`{prefix + alias}`" for alias in group.aliases]), inline=False)
+
+
+        if hasattr(group, "available_args") and group.available_args:
+            arg_builder = ""
             for typ in group.available_args:
-                desc += f"\n**_{typ['type']}_**"
+                arg_builder += f"\n**{typ['type']}**"
                 for arg in typ['args']:
-                    desc += f"\n`{arg['name']}`\n*{arg['desc']}*"
+                    arg_builder += f"\n`{arg['name']}`\n***{arg['desc']}***"
+            embed.add_field(name="**Arguments**", value=arg_builder)
 
-        desc += f"\n\n_Was this helpful?  [**Yup**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1) | [**Nope**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1)_"
+        if hasattr(group, "examples") and group.examples:
+            example_builder = ""
+            for ex in group.examples:
+                example_builder += f"\n`{ex['ex']}`\n{ex['desc']}"
+            embed.add_field(name="**Examples**", value=example_builder)
+
+
+        desc += f"\n\n_Was this helpful?_  [**Yes**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1) | [**Nope**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=0)"
         embed.description = desc
 
         await self.get_destination().send(embed=embed)

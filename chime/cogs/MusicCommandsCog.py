@@ -1,22 +1,18 @@
-import datetime
-import time
-from typing import List, Union
+from typing import Union
 
 import discord
-import humanize
 import wavelink
 from discord import Message, VoiceState, Member, VoiceChannel
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
-from wavelink import Track, Player, TrackPlaylist
+from wavelink import Player, TrackPlaylist
 
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
-from chime.misc.SongSelector import SongSelector
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import check_if_url, get_currently_playing_embed, search_song
+from chime.misc.util import get_currently_playing_embed, search_song
 
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):
@@ -137,10 +133,9 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         else:
             raise BadRequestException("Currently, no track is loaded/paused")
 
-    @commands.command(aliases=["vol"])
-    async def volume(self, ctx: Context,
-                     volume: int):  # TODO premium only, setting the volume is an expensive operation
-        """Sets the volume of the current track. Valid values: `3` - `200`. Default is 40. For bass-boosting see """ + prefix + """boost"""
+    @commands.command(aliases=["vol"], help=f"Sets the volume of the current track. Valid values: `3` - `200`. Default is 40.")
+    async def volume(self, ctx: Context, volume: int):
+        f""""""
         if volume > 200 or volume < 3:
             raise BadRequestException("Volume has to be between 3 and 200!")
 
@@ -164,6 +159,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
     @commands.command(aliases=["nowplaying", "now", "current", "song"])
     async def playing(self, ctx):
+        """Shows the song that's currently playing."""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
@@ -271,12 +267,6 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException(
                 "The index I should jump to isn't part of the queue. Try to enter something lower.")
 
-    @commands.command()
-    async def debug(self, ctx):
-        player: Player = self.bot.wavelink.get_player(ctx.guild.id)
-        my_track: Track = player.current
-        await ctx.send(my_track.id)
-        await ctx.send(my_track.identifier)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
@@ -293,6 +283,8 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                     embed = StyledEmbed(suppress_tips=True, description="**I left the channel due to inactivity.**")
                     embed.set_footer(text="Please consider to donate, you'll get some nifty features!")
                     await controller.channel.send(embed=embed)
+                    if controller.now_playing_msg:
+                        await controller.now_playing_msg.delete()
                     try:
                         controller.task.cancel()
                         del self.bot.controllers[member.guild.id]

@@ -29,16 +29,56 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
 
     @commands.command()
     async def playlists(self, ctx: Context):
-        """Shows a list of all your playlists"""
+        """Shows a list of all your playlists. Alias of `""" + prefix + """playlist list`"""
         profile_ref: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
         profile = profile_ref.get()
         profile_data: dict = profile.to_dict()
-        if "playlists" in profile_data.keys() and len(profile_data["playlists"]) > 0:
+        if profile_data and "playlists" in profile_data.keys() and len(profile_data["playlists"]) > 0:
             await ctx.send(embed=StyledEmbed(title="Your playlists", description=f"use the `{prefix}playlist` commands for adding songs to a playlist, creating playlists, viewing the playlist's contents etc. \n\n" + "\n".join([f"•  **{playlist['name']}**" for playlist in profile_data['playlists']])))
         else:
             raise BadRequestException(f"You currently don't have any playlists. Create one with `{prefix}playlist create <name>`.")
 
-    @custom_command(usage="playlist [action] <playlist_name>", aliases=["pl", "l"], available_args=[{"type": "[action]", "args": [{"name": "list", "desc": "List all your playlists."}, {"name": "create", "desc": "Create a playlist."}, {"name": "add", "desc": "Add a song to the given playlist."}, {"name": "show | view", "desc": "List the songs in your playlist."}, {"name": "play", "desc": "Play the playlist."}, {"name": "delete", "desc": "Delete the playlist."}]}])
+    @custom_command(
+        usage="playlist [action] <playlist_name>",
+        aliases=["pl", "l"],
+        available_args=[
+            {"type": "[action]", "args":
+                [
+                    {"name": "list", "desc": "Lists all your playlists."},
+                    {"name": "create", "desc": "Creates a playlist."},
+                    {"name": "add", "desc": "Adds a song to the given playlist."},
+                    {"name": "show | view", "desc": "Lists the songs in your playlist."},
+                    {"name": "play", "desc": "Plays the playlist."},
+                    {"name": "delete", "desc": "Deletes the playlist."}
+                ]
+             }],
+        examples=[
+            {
+                "ex": "pl create Favorites",
+                "desc": "Creates a playlist called 'Favorites'"
+            },
+            {
+                "ex": "pl create \"chill hop\"",
+                "desc": "Creates a playlist called 'chill hop'. Note the quotation marks that we need because the name contains a space."
+            },
+            {
+                "ex": "pl play favorites",
+                "desc": "Adds all the songs in the playlist to the queue and plays them."
+            },
+            {
+                "ex": "pl show favorites",
+                "desc": "Shows the contents of the playlist 'favorites'."
+            },
+            {
+                "ex": "pl add favorites oh my dayum",
+                "desc": "Adds the song 'oh my dayum' to the playlist 'favorites'."
+            },
+            {
+                "ex": "pl list",
+                "desc": "Lists all your playlists."
+            }
+        ]
+    )
     async def playlist(self, ctx: Context, action: str, playlist: str = None, *, additional_args=None):
         """Manage all your personal playlists. You can also manage them on [chime's web app](https://chime.realmayus.xyz)"""
         if action == "create":
@@ -96,20 +136,18 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                             raise BadRequestException("Playlist is empty!")
 
                         index = 0
-                        last_added_track = None
                         failed = 0
                         for index, song_data_raw in enumerate(contents):
                             try:
                                 track = await self.bot.wavelink.build_track(song_data_raw["data"])
-                                last_added_track = track
                                 controller = self.get_controller(ctx)
                                 controller.queue.append(track)
                             except BuildTrackError:
                                 failed += 1
                                 print("Failed to reconstruct track with data " + song_data_raw["data"])
-                        await ctx.send(embed=StyledEmbed(description=f"**Added** {index + 1} **tracks to queue**" if index > 1 else f"**Added** {last_added_track} **to queue.**"))
+                        await ctx.send(embed=StyledEmbed(description=f"**Added** {index + 1} **tracks to queue**."))
                         if failed > 0:
-                            raise BadRequestException(f"**Failed to add** {failed} **tracks**!")
+                            raise BadRequestException(f"**Failed to add** {failed} **track(s)**!")
                     else:
                         raise BadRequestException(f"Could not load playlist {playlist}!")
                 else:
@@ -169,15 +207,11 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
 
     @commands.command()
     async def like(self):
-        """Adds the current song to your 'Liked Songs' playlist"""
+        """Adds the current song to your 'Liked' playlist"""
 
     @commands.command()
     async def dislike(self):
-        """Removes the current song/the given song from your 'Liked Songs' playlist"""
-
-    @commands.command(usage="remove [playlist] <search term>")
-    async def remove(self, ctx: Context, playlist: str, search_term: str = None):
-        """Removes the current song or a song from a search term from the given playlist"""
+        """Removes the current song/the given song from your 'Liked' playlist"""
 
     def get_controller(self, value: Union[commands.Context, wavelink.Player]):
         """Return the given guild's instance of the MusicController"""
