@@ -7,7 +7,8 @@ echo "Reinstalling chime…"
 echo
 venv/bin/python3 -m pip install .
 echo
-read -r -p "Restart chime (y/n)?" CONT
+echo "##################"
+read -r -p "Done! Restart chime (y/n)?" CONT
 if [ "$CONT" = "y" ]; then
   sudo service chime restart;
 else
