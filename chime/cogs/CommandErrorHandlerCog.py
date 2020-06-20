@@ -33,6 +33,7 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
+            self.bot.get_cog("StatsCog").add_non_existant_command(ctx.command.name)
             return
 
 

@@ -24,6 +24,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
         self.bot.controllers = {}
 
+
     async def start_nodes(self):
         await self.bot.wait_until_ready()
         # Initiate our nodes. For this example we will use one server.
@@ -35,6 +36,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                                                                     identifier='TEST',
                                                                     region='us_central')
         node.set_hook(self.on_event_hook)
+
 
     async def cog_check(self, ctx):
         """A local check which applies to all commands in this cog."""
@@ -61,6 +63,10 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             controller = MusicController(self.bot, gid)
             self.bot.controllers[gid] = controller
         return controller
+
+    @commands.Cog.listener()
+    async def on_command_completion(self, ctx):
+        self.bot.get_cog("StatsCog").add_executed_command(ctx.command.name)
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel = None):

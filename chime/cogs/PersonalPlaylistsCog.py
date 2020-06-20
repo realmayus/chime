@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Union
+from typing import Union
 
 import google
 import wavelink
@@ -21,11 +21,9 @@ from chime.misc.util import check_if_playlist_exists, search_song
 
 
 class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
-    def __init__(self, bot):
+    def __init__(self, bot, db):
         self.bot = bot
-        cred = credentials.Certificate("./secret/firebase_creds.json")
-        firebase_admin.initialize_app(cred)
-        self.db: Client = firestore.client()
+        self.db = db
 
     @commands.command()
     async def playlists(self, ctx: Context):
@@ -85,16 +83,16 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             if not additional_args:  # if the playlist name contained spaces, the individual parts would be in additional_args
                 profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
                 if not check_if_playlist_exists(profile, playlist):
-                    with ctx.typing():
-                        playlist_id = str(uuid.uuid4())
-                        playlist_doc: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
-                        playlist_doc.set({"contents": []})
-                        try:
-                            profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
-                        except google.api_core.exceptions.NotFound:
-                            profile.set({"playlists": []}, merge=True)
-                            profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
-                        await ctx.message.add_reaction("<:OK:716230152643674132>")
+                    playlist_id = str(uuid.uuid4())
+                    playlist_doc: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
+                    playlist_doc.set({"contents": []})
+                    try:
+                        profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
+                    except google.api_core.exceptions.NotFound:
+                        profile.set({"playlists": []}, merge=True)
+                        profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
+                    await ctx.message.add_reaction("<:OK:716230152643674132>")
+
                 else:
                     raise BadRequestException(f"A playlist with the name `{playlist}` exists already!")
             else:
