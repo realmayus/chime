@@ -89,7 +89,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller = self.get_controller(ctx)
         controller.channel = ctx.channel
 
-    @commands.command()
+    @commands.command(aliases=["p"])
     async def play(self, ctx, *, query: str):
         """Searches for the search term on youtube or plays from the given URL. When `liked` is passed as the only argument, the bot plays your liked songs"""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -149,7 +149,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await player.set_volume(volume)
         await ctx.message.add_reaction("<:OK:716230152643674132>")
 
-    @commands.command(aliases=["quit"])
+    @commands.command(aliases=["quit", "exit", "disconnect"])
     async def leave(self, ctx):
         """Leaves the current channel."""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -177,7 +177,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             pass
         controller.now_playing_msg = await ctx.send(embed=get_currently_playing_embed(player.current))
 
-    @commands.command(aliases=["repeat"])
+    @commands.command(aliases=["repeat", "lo", "lp"])
     async def loop(self, ctx, looping_mode):
         """Sets the looping mode. Valid values: `off`, `track`, `queue`"""
         controller = self.get_controller(ctx)
@@ -190,11 +190,13 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 controller.looping_mode = 1
             elif looping_mode == "queue":
                 controller.looping_mode = 2
+            elif looping_mode == "shuffle":
+                controller.looping_mode = 3
             await ctx.message.add_reaction("<:OK:716230152643674132>")
         else:
             raise BadRequestException("Invalid value for this command. Valid values: `off`, `track`, `queue`")
 
-    @commands.command(name="queue")
+    @commands.command(name="queue", aliases=["q"])
     async def queue_(self, ctx):
         """Shows the queue."""
         controller = self.get_controller(ctx)
@@ -205,7 +207,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 index + 1) + ".   " + song.title for index, song in enumerate(controller.queue)], ctx, self.bot)
         await pagedlist.send(pagedlist.get())
 
-    @commands.command()
+    @commands.command(aliases=["cl"])
     async def clear(self, ctx):
         """Clears the queue."""
         controller = self.get_controller(ctx)
@@ -213,7 +215,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller.current_index = 0
         await ctx.message.add_reaction("<:OK:716230152643674132>")
 
-    @commands.command()
+    @commands.command(aliases=["s"])
     async def skip(self, ctx):
         """Skips the current song."""
         player: Player = self.bot.wavelink.get_player(ctx.guild.id)
