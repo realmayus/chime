@@ -58,11 +58,6 @@ class StatsCog(commands.Cog):
     def set_server_count(self):
         self.stats["server_amount"].append({"value": len(self.bot.guilds), "time": time.time()})
 
-    @commands.command(name="push")
-    async def push_cmd(self, ctx):
-        self.push_stats()
-        await ctx.send("OK")
-
     def push_stats(self):
         self.set_current_listening_users()
         self.set_current_listening_servers()
