@@ -3,8 +3,7 @@ import logging
 import time
 import psutil
 from discord.ext import commands
-from firebase_admin import firestore
-from google.cloud.firestore_v1 import DocumentReference, Client, CollectionReference, ArrayUnion
+from google.cloud.firestore_v1 import Client, CollectionReference, ArrayUnion
 
 
 class StatsCog(commands.Cog):
@@ -38,9 +37,7 @@ class StatsCog(commands.Cog):
         pass
 
     def set_latency(self):
-        print("latency", self.bot.latency)
         self.stats["latency"].append({"value": self.bot.latency, "time": time.time()})
-        print(self.stats)
 
     def set_cpu_usage(self):
         self.stats["cpu_usage"].append({"value": psutil.cpu_percent(), "time": time.time()})
@@ -66,9 +63,7 @@ class StatsCog(commands.Cog):
         self.set_ram_usage()
         self.set_cpu_usage()
         stats_coll_ref: CollectionReference = self.db.collection("stats")
-        print("############################", self.stats)
         for key, value in self.stats.items():
-            print(key, value)
             if value:
                 if not stats_coll_ref.document(key).get().exists:
                     stats_coll_ref.document(key).set({"data": value})
