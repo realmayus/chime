@@ -83,16 +83,8 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             if not additional_args:  # if the playlist name contained spaces, the individual parts would be in additional_args
                 profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
                 if not check_if_playlist_exists(profile, playlist):
-                    playlist_id = str(uuid.uuid4())
-                    playlist_doc: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
-                    playlist_doc.set({"contents": []})
-                    try:
-                        profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
-                    except google.api_core.exceptions.NotFound:
-                        profile.set({"playlists": []}, merge=True)
-                        profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
+                    self.create_playlist(profile, ctx.author.id, playlist)
                     await ctx.message.add_reaction("<:OK:716230152643674132>")
-
                 else:
                     raise BadRequestException(f"A playlist with the name `{playlist}` exists already!")
             else:
@@ -203,12 +195,41 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
         else:
             raise BadRequestException("This action does not exist. Valid actions are: `create`, `list`, `add`, `show`, `play`, `delete` and `link`.")
 
-    @commands.command()
-    async def like(self):
-        """Adds the current song to your 'Liked' playlist"""
+    def create_playlist(self, profile, userID, playlist):
+        playlist_id = str(uuid.uuid4())
+        playlist_doc: DocumentReference = self.db.collection(str(userID)).document(playlist_id)
+        playlist_doc.set({"contents": []})
+        try:
+            profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
+        except google.api_core.exceptions.NotFound:
+            profile.set({"playlists": []}, merge=True)
+            profile.update({"playlists": firestore.ArrayUnion([{"name": playlist, "ref": playlist_id}])})
+
+        return playlist_doc
 
     @commands.command()
-    async def dislike(self):
+    async def like(self, ctx):
+        """Adds the current song to your 'Liked' playlist"""
+        current_track: Track = self.get_controller(ctx).current_track
+        if not current_track:
+            raise BadRequestException("No track is currently playling!")
+
+        profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
+        if not check_if_playlist_exists(profile, "Liked"):
+            playlist_doc_ref = self.create_playlist(profile, ctx.author.id, "Liked")
+        else:
+            playlist_id = check_if_playlist_exists(profile, "Liked")
+            playlist_doc_ref: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
+
+        if playlist_doc_ref is not None:
+            playlist_doc_ref.update({"contents": firestore.ArrayUnion(
+                [{"title": current_track.title, "author": current_track.author, "data": current_track.id,
+                  "url": current_track.uri, "id": str(uuid.uuid4()), "duration": current_track.duration}])})
+            await ctx.message.add_reaction("<:OK:716230152643674132>")
+
+
+    @commands.command()
+    async def dislike(self, ctx):
         """Removes the current song/the given song from your 'Liked' playlist"""
 
     def get_controller(self, value: Union[commands.Context, wavelink.Player]):

@@ -21,6 +21,10 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot: Bot = bot
         self.imageCaptcha = ImageCaptcha(fonts=["./assets/Inter-Medium.ttf"])
+        byte_arr = io.BytesIO()
+        string_arr = io.StringIO()
+        string_arr.write("test")
+        io.BytesIO(string_arr)
 
 
     @commands.command(hidden=True)
@@ -60,7 +64,6 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
 
         try:
             reaction: RawReactionActionEvent = await self.bot.wait_for('raw_reaction_add', timeout=20.0, check=check_reaction)
-            user = reaction.member
         except asyncio.TimeoutError:
             """Handle Timeout"""
         else:
@@ -146,10 +149,6 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
         """Shows useful information about the current node your chime player is connected to. Useful for troubleshooting."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
         node = player.node
-
-        used = humanize.naturalsize(node.stats.memory_used)
-        total = humanize.naturalsize(node.stats.memory_allocated)
-        cpu = node.stats.cpu_cores
 
         embed = StyledEmbed(title="chime stats")
         embed.description = f'Connected to {len(self.bot.wavelink.nodes)} node(s).\n' \
