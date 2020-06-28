@@ -36,7 +36,7 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
             self.bot.get_cog("StatsCog").add_non_existant_command(ctx.command.name)
             return
-        elif isinstance(error, wavelink.errors.ZeroConnectedNodes):
+        elif isinstance(error, discord.ext.commands.errors.CommandInvokeError) and isinstance(error, wavelink.errors.ZeroConnectedNodes):
             report_channel_ = await self.bot.fetch_channel(report_channel)
             error_embed = StyledEmbed(suppress_tips=True,
                                       title=f"<:warning:717043607298637825>  Outage Report")
