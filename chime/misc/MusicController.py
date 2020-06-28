@@ -78,8 +78,11 @@ class MusicController:
                     except IndexError:
                         await asyncio.sleep(0)
                         continue
+            else:
+                await asyncio.sleep(0)
+                continue
 
-            await player.play(song)  # play that motherfcker  (I tried to fix this dumb queue feature for countless hours, sigh)
+            await player.play(song)
             self.now_playing_msg = await self.channel.send(embed=get_currently_playing_embed(song))  # send the "currently playing embed
             self.current_track = song  # set the current_track variable to our track
             await self.next.wait()  # wait for the event to finish
