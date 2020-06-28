@@ -1,7 +1,7 @@
 # Project exclude paths
-/venv/
+venv/*
 
-secret
+secret/*
 start-dev
 
-lavalink
+lavalink/*
