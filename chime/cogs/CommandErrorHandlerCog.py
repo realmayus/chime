@@ -4,6 +4,7 @@ import traceback
 
 import discord
 import requests
+import wavelink
 from discord.ext import commands
 from discord.ext.commands import Bot
 
@@ -35,7 +36,14 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
             self.bot.get_cog("StatsCog").add_non_existant_command(ctx.command.name)
             return
-
+        elif isinstance(error, wavelink.errors.ZeroConnectedNodes):
+            report_channel_ = await self.bot.fetch_channel(report_channel)
+            error_embed = StyledEmbed(suppress_tips=True,
+                                      title=f"<:warning:717043607298637825>  Outage Report")
+            error_embed.description = "Chime detected an outage:\n\n" + "```" + '\n'.join([line.strip('\n') for line in traceback.format_exception(type(error), error, error.__traceback__, limit=1)]) + "```"
+            error_embed.set_author(name="Automatic Outage Report")
+            await report_channel_.send("<@&718113149651255386>", embed=error_embed)
+            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  A critical outage has been detected and the developers **have been notified**. Sorry! You can get support here: \nhttps://discord.gg/DGd8T53'))
 
         await ctx.send(embed=StyledEmbed(description="<:warning:717043607298637825> Sorry, an unknown error occurred whilst executing this command. The error has been reported automatically. You can get support here: \nhttps://discord.gg/DGd8T53"))
 
