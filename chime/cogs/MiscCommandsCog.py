@@ -21,10 +21,6 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
         self.bot: Bot = bot
         self.imageCaptcha = ImageCaptcha(fonts=["./assets/Inter-Medium.ttf"])
-        byte_arr = io.BytesIO()
-        string_arr = io.StringIO()
-        string_arr.write("test")
-        io.BytesIO(string_arr)
 
 
     @commands.command(hidden=True)
