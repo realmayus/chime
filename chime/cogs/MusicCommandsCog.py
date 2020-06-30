@@ -17,6 +17,8 @@ from chime.misc.util import get_currently_playing_embed, search_song
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):
     def __init__(self, bot):
+        """All the core-features of chime, i.e. the music features."""
+
         self.bot: Bot = bot
         if not hasattr(bot, 'wavelink'):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
@@ -141,7 +143,6 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
     @commands.command(aliases=["vol"], help=f"Sets the volume of the current track. Valid values: `3` - `200`. Default is 40.")
     async def volume(self, ctx: Context, volume: int):
-        f""""""
         if volume > 200 or volume < 3:
             raise BadRequestException("Volume has to be between 3 and 200!")
 

@@ -1,14 +1,13 @@
+import base64
 import uuid
-from typing import Union
-
 import google
 import wavelink
+from typing import Union
 from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context
-import firebase_admin
-from firebase_admin import credentials, firestore
-from google.cloud.firestore_v1 import Client, DocumentReference
+from firebase_admin import firestore
+from google.cloud.firestore_v1 import DocumentReference
 from wavelink import Player, TrackPlaylist, BuildTrackError, Track
 
 from chime.main import prefix
@@ -22,6 +21,8 @@ from chime.misc.util import check_if_playlist_exists, search_song
 
 class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
     def __init__(self, bot, db):
+        """A cog that handles interfacing with the database and the creation, population and editing of personal playlists."""
+
         self.bot = bot
         self.db = db
 
@@ -215,10 +216,10 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             raise BadRequestException("No track is currently playling!")
 
         profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
-        if not check_if_playlist_exists(profile, "Liked"):
+        playlist_id = check_if_playlist_exists(profile, "Liked")
+        if not playlist_id:
             playlist_doc_ref = self.create_playlist(profile, ctx.author.id, "Liked")
         else:
-            playlist_id = check_if_playlist_exists(profile, "Liked")
             playlist_doc_ref: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
 
         if playlist_doc_ref is not None:
@@ -231,6 +232,20 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
     @commands.command()
     async def dislike(self, ctx):
         """Removes the current song/the given song from your 'Liked' playlist"""
+
+    @commands.command()
+    async def share(self, ctx, *, playlist):
+        """Shows a shareable link so that others can see and clone your beautiful playlist!"""
+        profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
+        playlist_id = check_if_playlist_exists(profile, playlist)
+        if not playlist_id:
+            raise BadRequestException(f"No playlist with the name {playlist} exists!")
+
+        message = f"{ctx.author.id}:{playlist_id}:{playlist}:{ctx.author.name}"
+        message_bytes = message.encode("utf8")
+        base64_bytes = base64.b64encode(message_bytes)
+        base64_message = base64_bytes.decode("ascii")
+        await ctx.send(embed=StyledEmbed(title="Share this link", description=f"https://chime.realmayus.xyz/view/{base64_message}"))
 
     def get_controller(self, value: Union[commands.Context, wavelink.Player]):
         """Return the given guild's instance of the MusicController"""

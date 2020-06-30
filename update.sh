@@ -1,3 +1,4 @@
+#!/bin/bash
 echo
 read -r -p "Reset local repository (y/n)?  " CONT
 if [ "$CONT" = "y" ]; then

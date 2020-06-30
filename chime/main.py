@@ -37,6 +37,7 @@ def start():
     cred = credentials.Certificate("./secret/firebase_creds.json")
     firebase_admin.initialize_app(cred)
     db: Client = firestore.client()
+    logger.info("> Initialized DB!")
     print("> Initialized DB!")
 
 
@@ -46,8 +47,8 @@ def start():
     bot.add_cog(CommandErrorHandlerCog(bot))
     bot.add_cog(PersonalPlaylistsCog(bot, db))
     bot.add_cog(StatsCog(bot, db))
-    logger.info("Loaded cogs!")
-    print("Loaded cogs!")
+    logger.info("> Loaded cogs!")
+    print("> Loaded cogs!")
     bot.run(get_token(start_dev))
 
 

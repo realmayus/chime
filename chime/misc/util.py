@@ -1,12 +1,10 @@
 import configparser
-import logging
 import re
-from logging.handlers import RotatingFileHandler
 from typing import List
 
 from discord import Message
 from google.cloud.firestore_v1 import  DocumentReference, DocumentSnapshot
-from wavelink import Track, TrackPlaylist
+from wavelink import Track
 
 from chime.misc.BadRequestException import BadRequestException
 from chime.misc.StyledEmbed import StyledEmbed

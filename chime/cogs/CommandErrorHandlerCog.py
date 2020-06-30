@@ -15,6 +15,7 @@ from chime.main import report_channel
 
 class CommandErrorHandlerCog(commands.Cog, name="‎"):
     def __init__(self, bot):
+        """A cog that handles most errors occurring while running the bot."""
         self.bot: Bot = bot
 
     @commands.Cog.listener()

@@ -7,7 +7,10 @@ from google.cloud.firestore_v1 import Client, CollectionReference, ArrayUnion
 
 
 class StatsCog(commands.Cog):
+
     def __init__(self, bot, db):
+        """A cog that sends the current server stats every X minutes to the database."""
+
         self.bot: commands.Bot = bot
         self.db: Client = db
         self.logger = logging.getLogger("chime")

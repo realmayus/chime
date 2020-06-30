@@ -11,6 +11,7 @@ from chime.misc.StyledEmbed import StyledEmbed
 
 class MiscCog(commands.Cog):
     def __init__(self, bot):
+        """A cog for miscellaneous features that aren't commands but interface with discord.py"""
         self.bot: commands.Bot = bot
         self.logger = logging.getLogger("chime")
 

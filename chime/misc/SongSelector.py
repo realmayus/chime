@@ -11,6 +11,7 @@ from chime.misc.util import get_song_selector_embed_desc_for_current_page, react
 
 class SongSelector:
     def __init__(self, results: List[Track], bot: Bot, success_callback_function, ctx: Context) -> None:
+        """Kinda like PagedListEmbed but with controls for selecting songs."""
         self.current_page = 0
         self.results = results
         self.bot = bot

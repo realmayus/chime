@@ -3,6 +3,8 @@ from discord.ext.commands import Command
 
 class CustomCommand(Command):
     def __init__(self, func, **kwargs):
+        """A custom command decorator which allows for setting the 'available_args' and 'examples' fields. Used in the help command."""
+
         super(CustomCommand, self).__init__(func, **kwargs)
         self.available_args = kwargs.get('available_args')
         self.examples = kwargs.get('examples')

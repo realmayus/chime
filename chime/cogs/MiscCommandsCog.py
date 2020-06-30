@@ -7,7 +7,6 @@ import time
 
 import discord
 from captcha.image import ImageCaptcha
-import humanize
 from discord import RawReactionActionEvent, Message
 from discord.ext import commands
 from discord.ext.commands import Bot, BucketType
@@ -19,6 +18,8 @@ from chime.misc.StyledEmbed import StyledEmbed
 
 class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot):
+        """A cog for miscellaneous commands which don't fit into the other cogs."""
+
         self.bot: Bot = bot
         self.imageCaptcha = ImageCaptcha(fonts=["./assets/Inter-Medium.ttf"])
 
@@ -47,7 +48,7 @@ class MiscCommandsCog(commands.Cog, name="Miscellaneous"):
     @commands.cooldown(2, 10*60, BucketType.guild)
     @commands.command()
     async def feedback(self, ctx):
-        """Gives you options to send feedback or to report bugs"""
+        """Gives you options to send feedback or to report bugs."""
         msg: Message = await ctx.send(embed=StyledEmbed(title="Feedback", description="Thanks for helping to improve chime! What's the problem? \n \n "
                                                                        u"1\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to send feedback\n"
                                                                        u"2\N{variation selector-16}\N{combining enclosing keycap}" + "  I'd like to report an outage\n"

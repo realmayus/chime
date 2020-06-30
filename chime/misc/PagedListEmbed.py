@@ -10,6 +10,7 @@ from chime.misc.StyledEmbed import StyledEmbed
 
 class PagedListEmbed:
     def __init__(self, title: str, contents: List[str], ctx: Context, bot: Bot, show_per_page: int = 10):
+        """A paged embed that shows a list!"""
         self.current_page = 0
         self.contents = contents
         self.count = 0

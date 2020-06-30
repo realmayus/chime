@@ -26,12 +26,13 @@ class MusicController:
         self.task = self.bot.loop.create_task(self.controller_loop())
 
     async def controller_loop(self):
+        """The loop."""
         await self.bot.wait_until_ready()
         player: Player = self.bot.wavelink.get_player(self.guild_id)
         await player.set_volume(self.volume)
         while True:
             if self.now_playing_msg is not None:
-                """Check if the "currently playing" message is still there, if so, try to delete it :)"""
+                """Check if the "currently playing" message is still there, if so, try to delete it :)."""
                 try:
                     await self.now_playing_msg.delete()
                     self.now_playing_msg = None
@@ -41,7 +42,7 @@ class MusicController:
             # Remove the internal flag of our event (see docs of asyncio.Event for more info)
             self.next.clear()
             if self.looping_mode == 0:
-                """Looping is turned off, just play the next song in the queue if available"""
+                """Looping is turned off, just play the next song in the queue if available."""
                 try:
                     if len(self.queue) != 0 and len(self.queue) - 1 >= self.current_index:  # check if has next
                         self.current_index += 1
@@ -60,7 +61,7 @@ class MusicController:
             elif self.looping_mode == 1:
                 """Loop the current track"""
                 if self.current_track is not None:
-                    """Check if the current_track variable is not None, if so, play the track"""
+                    """Check if the current_track variable is not None, if so, play the track."""
                     song = self.current_track
                 else:
                     await asyncio.sleep(0)
