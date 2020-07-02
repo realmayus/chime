@@ -5,3 +5,5 @@ secret/*
 start-dev
 
 lavalink/*
+
+run.sh

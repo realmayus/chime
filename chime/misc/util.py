@@ -71,9 +71,13 @@ async def react_with_pagination_emoji(msg: Message, count: int, show_next: bool)
         await msg.add_reaction("▶️")
 
 
-def get_currently_playing_embed(current_track: Track):
+def get_currently_playing_embed(current_track: Track, current_time=None):
     currently_playing_embed = StyledEmbed(title="<:music_note:716669042500436010>  " + current_track.title)
     currently_playing_embed.set_author(name="Now playing", url=current_track.uri)
+
+    if current_time:
+        currently_playing_embed.description = get_song_progress_bar(current_time, current_track.duration)
+
     currently_playing_embed.add_field(name="Duration",
                                       value=get_friendly_time_delta(current_track.duration))
     currently_playing_embed.add_field(name="Artist", value=current_track.author)
@@ -122,3 +126,16 @@ async def search_song(query, ctx, bot, success_callback, success_callback_url):
 
     songselector = SongSelector(tracks, bot, success_callback, ctx)
     await songselector.send(songselector.get())
+
+
+def get_song_progress_bar(current_time, duration, total_length=30):
+    builder = ""
+    builder += f"{get_friendly_time_delta(current_time).strip()} "
+    current_position = round(current_time * (total_length / duration))  # rule of three ftw
+    for x in range(0, current_position):
+        builder += "⎯"
+    builder += "◉"
+    for y in range(0, total_length - current_position - 1):
+        builder += "⎯"
+    builder += f" {get_friendly_time_delta(duration).strip()}"
+    return builder

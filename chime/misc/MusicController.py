@@ -26,7 +26,7 @@ class MusicController:
         self.task = self.bot.loop.create_task(self.controller_loop())
 
     async def controller_loop(self):
-        """The loop."""
+        """The music loop."""
         await self.bot.wait_until_ready()
         player: Player = self.bot.wavelink.get_player(self.guild_id)
         await player.set_volume(self.volume)

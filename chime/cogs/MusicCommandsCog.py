@@ -171,12 +171,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
 
-        controller = self.get_controller(ctx)
-        try:
-            await controller.now_playing.delete()
-        except AttributeError:
-            pass
-        controller.now_playing_msg = await ctx.send(embed=get_currently_playing_embed(player.current))
+        await ctx.send(embed=get_currently_playing_embed(player.current, player.position))
 
     @commands.command(aliases=["repeat", "lo", "lp"])
     async def loop(self, ctx, looping_mode):
