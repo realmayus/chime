@@ -1,12 +1,12 @@
-import logging
+import asyncio
 import time
 import os.path
 
 import firebase_admin
+from discord import Game
 from firebase_admin import credentials, firestore
 from firebase_admin.auth import Client
 
-from chime.misc.logger import init_logger
 from discord.ext import commands
 
 # Activate dev mode (start using 2nd token) if start-dev file is present in root directory!
@@ -29,15 +29,12 @@ def start():
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()
-    logger = logging.getLogger("chime")
-    logger.info("Starting chime v." + version + "…")
     print("Starting chime v." + version + "…")
 
 
     cred = credentials.Certificate("./secret/firebase_creds.json")
     firebase_admin.initialize_app(cred)
     db: Client = firestore.client()
-    logger.info("> Initialized DB!")
     print("> Initialized DB!")
 
 
@@ -47,12 +44,19 @@ def start():
     bot.add_cog(CommandErrorHandlerCog(bot))
     bot.add_cog(PersonalPlaylistsCog(bot, db))
     bot.add_cog(StatsCog(bot, db))
-    logger.info("> Loaded cogs!")
+    bot.loop.create_task(status_task(bot))
     print("> Loaded cogs!")
     bot.run(get_token(start_dev))
 
 
+async def status_task(bot):
+    """Update the bot's status every 5 minutes"""
+    await bot.wait_until_ready()
+    while True:
+        await asyncio.sleep(5 * 60)
+        await bot.change_presence(
+            activity=Game(name="music to " + str(len(bot.guilds)) + " guilds %shelp" % prefix))
+
+
 def start_wrapper():
-    __logger__ = logging.getLogger("chime")
-    init_logger(__logger__)
     start()

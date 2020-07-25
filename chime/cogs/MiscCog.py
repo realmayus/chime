@@ -18,19 +18,13 @@ class MiscCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Gets called when the bot is connected to Discord. Activates the status task which updates the bot's status every 5 minutes"""
-        self.bot.loop.create_task(self.status_task())
         self.logger.info("Bot logged in as " + str(self.bot.user))
         print("Bot logged in as " + str(self.bot.user))
         if not hasattr(self.bot, "emoji_guild"):
             self.bot.emoji_guild = await self.bot.fetch_guild(716228019345293352)
         print("Bot logged in as " + str(self.bot.user))
 
-    async def status_task(self):
-        """Update the bot's status every 5 minutes"""
-        while True:
-            await self.bot.change_presence(
-                activity=Game(name="music to " + str(len(self.bot.guilds)) + " guilds %shelp" % prefix))
-            await asyncio.sleep(5 * 60)
+
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: Guild):
