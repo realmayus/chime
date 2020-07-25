@@ -38,7 +38,7 @@ class CachedGuildData:
         return self
 
 
-def usage():
-    x = None
-    if not hasattr(x, "guild_data"):
-        x.guild_data = [CachedGuildData(db).load(2934)]
+# def usage():
+    # x = None
+    # if not hasattr(x, "guild_data"):
+    #     x.guild_data = [CachedGuildData(db).load(2934)]

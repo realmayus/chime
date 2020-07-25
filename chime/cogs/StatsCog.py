@@ -28,9 +28,10 @@ class StatsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        from chime.main import start_dev
-        if not start_dev:  # only start stats logging when not running in dev mode!
-            self.bot.loop.create_task(self.push_stats_handler())
+        pass
+        # from chime.main import start_dev
+        # if not start_dev:  # only start stats logging when not running in dev mode!
+        #     self.bot.loop.create_task(self.push_stats_handler())
 
     def add_executed_command(self, command: str):
         self.stats["common_commands"].append({"value": command, "time": time.time()})
