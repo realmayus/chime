@@ -60,5 +60,10 @@ To do that, enter your virtual environment using `source venv/bin/activate` and 
 If new commits were commited and you want to update chime, simply execute `git pull` in the root directory of chime and then update the chime binary.
 
 
+#### Service file
+If you want to use a process manager to start/stop chime automatically, you can use systemd with this config file:
+https://gist.github.com/realmayus/cc18a29aadff5b92c776632f8632645f
+Put that in /etc/systemd/system/chime.service and start the service with `service chime start` and stop it with `service chime stop`. You can see the logs using `journalctl -u chime.service`.
+
 #### Asset Credits
 Music Disc with Note: Icon made by Freepik from www.flaticon.com
