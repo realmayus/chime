@@ -1,9 +1,14 @@
 from setuptools import setup
 from chime.main import version
+from pip._internal.req import parse_requirements
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
+def load_requirements(fname):
+    reqs = parse_requirements(fname, session="test")
+    return [str(ir.req) for ir in reqs]
+    
 setup(
     name="chime-discord",
     version=version,
@@ -15,7 +20,7 @@ setup(
     author_email="realmayus@gmail.com",
     license="GPLv3",
     packages=["chime", "chime.cogs", "chime.misc"],
-    install_requires=["discord.py", "firebase-admin", "wavelink", "humanize", "captcha", "psutil"],
+    install_requires=load_requirements("requirements.txt"),
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 3 - Alpha",
