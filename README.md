@@ -8,6 +8,8 @@
 
 Don't want to host it on your own? You can invite a hosted version of chime by clicking [here](https://discord.com/api/oauth2/authorize?client_id=716032601646694531&permissions=37055552&scope=bot)
 
+**Chime's website:** https://chime.realmayus.xyz
+
 **Related Projects**:
 
 chime-web, the frontend of the chime website: https://github.com/realmayus/chime-web
