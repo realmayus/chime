@@ -1,5 +1,5 @@
 ![Chime Banner](https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK)
-<p align="center"><strong>A scalable, intuitive and easy-to-use music bot for Discord.</strong></p>
+<p align="center"><strong>A scalable, intuitive and easy-to-use music bot with custom playlists for Discord.</strong></p>
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0154ebd7b9284606951bfc6429701324)](https://app.codacy.com/manual/realmayus/chime?utm_source=github.com&utm_medium=referral&utm_content=realmayus/chime&utm_campaign=Badge_Grade_Dashboard)
 
