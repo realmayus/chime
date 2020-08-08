@@ -11,6 +11,7 @@ Don't want to host it on your own? You can invite a hosted version of chime by c
 **Related Projects**:
 
 chime-web, the frontend of the chime website: https://github.com/realmayus/chime-web
+
 chime-backend, the backend of the chime website: https://github.com/realmayus/chime-backend
 
 #### Host chime on your own
