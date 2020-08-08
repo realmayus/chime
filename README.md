@@ -52,7 +52,6 @@ token = YOUR_PRIMARY_TOKEN
 ; token-dev = YOUR_SECONDARY_TOKEN  <-- OPTIONAL
 ```
 
-If you want to set up automated bug reporting on github, enter a third token with the key `github-access-token` and your github access token as the value. Make sure to enable automated error reporting and set the repository URLs in main.py. 
 
 You have to update the chime binary after changing anything:
 
