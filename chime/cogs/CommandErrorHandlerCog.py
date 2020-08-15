@@ -35,7 +35,6 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
-            self.bot.get_cog("StatsCog").add_non_existant_command(ctx.command.name)
             return
         elif isinstance(error, discord.ext.commands.errors.CommandInvokeError) and isinstance(error.original, wavelink.errors.ZeroConnectedNodes):
             report_channel_ = await self.bot.fetch_channel(report_channel)
@@ -46,7 +45,10 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
             await report_channel_.send("<@&718113149651255386>", embed=error_embed)
             return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  A critical outage has been detected and the developers **have been notified**. Sorry! You can get support here: \nhttps://discord.gg/DGd8T53'))
 
-        await ctx.send(embed=StyledEmbed(description="<:warning:717043607298637825> Sorry, an unknown error occurred whilst executing this command. The error has been reported automatically. You can get support here: \nhttps://discord.gg/DGd8T53"))
+        try:
+            await ctx.send(embed=StyledEmbed(description="<:warning:717043607298637825> Sorry, an unknown error occurred whilst executing this command. The error has been reported automatically. You can get support here: \nhttps://discord.gg/DGd8T53"))
+        except:
+            pass
 
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
