@@ -1,0 +1,6 @@
+discord.py
+firebase-admin
+wavelink
+humanize
+captcha
+psutil
