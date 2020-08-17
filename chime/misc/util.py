@@ -72,7 +72,7 @@ async def react_with_pagination_emoji(msg: Message, count: int, show_next: bool)
 
 
 def get_currently_playing_embed(current_track: Track, current_time=None):
-    currently_playing_embed = StyledEmbed(title="<:music_note:716669042500436010>  " + current_track.title)
+    currently_playing_embed = StyledEmbed(title="<:music_note:718120922367787099>  " + current_track.title)
     currently_playing_embed.set_author(name="Now playing", url=current_track.uri)
 
     if current_time:
