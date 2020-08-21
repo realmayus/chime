@@ -133,7 +133,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if player.is_playing and player.is_paused:
             await player.set_pause(False)
-            await ctx.message.add_reaction("<:OK:716230152643674132>")
+            await ctx.message.add_reaction("<:ok:746377326245445653>")
         else:
             raise BadRequestException("Currently, no track is loaded/paused")
 
@@ -144,7 +144,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
         player = self.bot.wavelink.get_player(ctx.guild.id)
         await player.set_volume(volume)
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        await ctx.message.add_reaction("<:ok:746377326245445653>")
 
     @commands.command(aliases=["quit", "exit", "disconnect"])
     async def leave(self, ctx):
@@ -184,7 +184,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 controller.looping_mode = 2
             elif looping_mode == "shuffle":
                 controller.looping_mode = 3
-            await ctx.message.add_reaction("<:OK:716230152643674132>")
+            await ctx.message.add_reaction("<:ok:746377326245445653>")
         else:
             raise BadRequestException("Invalid value for this command. Valid values: `off`, `track`, `queue`")
 
@@ -205,7 +205,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         controller = self.get_controller(ctx)
         controller.queue = []
         controller.current_index = 0
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        await ctx.message.add_reaction("<:ok:746377326245445653>")
 
     @commands.command(aliases=["s"])
     async def skip(self, ctx):
@@ -216,7 +216,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         if not player.is_playing:
             raise BadRequestException('I am currently not playing anything!')
         await player.stop()
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        await ctx.message.add_reaction("<:ok:746377326245445653>")
         if controller.looping_mode == 1:
             await ctx.send("You are currently on loop mode: track. Skipping will just replay the song - turn looping off to play the next song in the queue.", delete_after=15)
 
@@ -231,7 +231,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException('You can\'t use seek in a stream!')
 
         await player.seek(player.position + seconds * 1000)
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        await ctx.message.add_reaction("<:ok:746377326245445653>")
 
     @commands.command(aliases=["ffto"])
     async def seekto(self, ctx, seconds: int):
@@ -247,7 +247,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException('You can\'t use seekto in a stream!')
 
         await player.seek(seconds * 1000)
-        await ctx.message.add_reaction("<:OK:716230152643674132>")
+        await ctx.message.add_reaction("<:ok:746377326245445653>")
 
     @commands.command(aliases=["jump", "skipto"])
     async def jumpto(self, ctx: Context, position: int):
@@ -262,7 +262,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             controller.current_index = position - 1  # If that worked, set the current index to the new position
             if player.is_playing:
                 await player.seek(player.current.length)  # If a song is currently playing, skip that!
-            await ctx.message.add_reaction("<:OK:716230152643674132>")  # gib ok
+            await ctx.message.add_reaction("<:ok:746377326245445653>")  # gib ok
         except IndexError:
             raise BadRequestException(
                 "The index I should jump to isn't part of the queue. Try to enter something lower.")

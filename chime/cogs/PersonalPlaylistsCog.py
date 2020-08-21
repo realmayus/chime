@@ -85,7 +85,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                 profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
                 if not check_if_playlist_exists(profile, playlist):
                     self.create_playlist(profile, ctx.author.id, playlist)
-                    await ctx.message.add_reaction("<:OK:716230152643674132>")
+                    await ctx.message.add_reaction("<:ok:746377326245445653>")
                 else:
                     raise BadRequestException(f"A playlist with the name `{playlist}` exists already!")
             else:
@@ -186,7 +186,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
                         playlist_doc.update({"contents": firestore.ArrayUnion(
                             [{"title": track_to_add.title, "author": track_to_add.author, "data": track_to_add.id, "url": track_to_add.uri, "id": str(uuid.uuid4()), "duration": track_to_add.duration} for
                              track_to_add in tracks_to_add])})
-                        await ctx.message.add_reaction("<:OK:716230152643674132>")
+                        await ctx.message.add_reaction("<:ok:746377326245445653>")
                     else:
                         raise BadRequestException(f"No playlist with the name {playlist} exists!")
                 else:
@@ -226,7 +226,7 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
             playlist_doc_ref.update({"contents": firestore.ArrayUnion(
                 [{"title": current_track.title, "author": current_track.author, "data": current_track.id,
                   "url": current_track.uri, "id": str(uuid.uuid4()), "duration": current_track.duration}])})
-            await ctx.message.add_reaction("<:OK:716230152643674132>")
+            await ctx.message.add_reaction("<:ok:746377326245445653>")
 
 
     @commands.command()

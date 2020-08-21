@@ -23,30 +23,30 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         """A local error handler for all errors arising from commands in this cog."""
         if isinstance(error, commands.NoPrivateMessage):
             try:
-                return await ctx.send(embed=StyledEmbed(description="<:warning:717043607298637825>  This command can't be executed in DMs.'"))
+                return await ctx.send(embed=StyledEmbed(description="<:warning:746377344393936997>  This command can't be executed in DMs.'"))
             except discord.HTTPException:
                 pass
         elif isinstance(error, discord.ext.commands.errors.CommandInvokeError) and isinstance(error.original, chime.misc.BadRequestException.BadRequestException):
-            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error.original.text)))
+            return await ctx.send(embed=StyledEmbed(description='<:warning:746377344393936997>  ' + str(error.original.text)))
         elif isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
+            return await ctx.send(embed=StyledEmbed(description='<:warning:746377344393936997>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.BadArgument):
-            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
+            return await ctx.send(embed=StyledEmbed(description='<:warning:746377344393936997>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
-            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  ' + str(error)))
+            return await ctx.send(embed=StyledEmbed(description='<:warning:746377344393936997>  ' + str(error)))
         elif isinstance(error, discord.ext.commands.errors.CommandNotFound):
             return
         elif isinstance(error, discord.ext.commands.errors.CommandInvokeError) and isinstance(error.original, wavelink.errors.ZeroConnectedNodes):
             report_channel_ = await self.bot.fetch_channel(report_channel)
             error_embed = StyledEmbed(suppress_tips=True,
-                                      title=f"<:warning:717043607298637825>  Outage Report")
+                                      title="<:warning:746377344393936997>  Outage Report")
             error_embed.description = "Chime detected an outage:\n\n" + "```" + '\n'.join([line.strip('\n') for line in traceback.format_exception(type(error), error, error.__traceback__, limit=1)]) + "```"
             error_embed.set_author(name="Automatic Outage Report")
             await report_channel_.send("<@&718113149651255386>", embed=error_embed)
-            return await ctx.send(embed=StyledEmbed(description='<:warning:717043607298637825>  A critical outage has been detected and the developers **have been notified**. Sorry! You can get support here: \nhttps://discord.gg/DGd8T53'))
+            return await ctx.send(embed=StyledEmbed(description='<:warning:746377344393936997>  A critical outage has been detected and the developers **have been notified**. Sorry! You can get support here: \nhttps://discord.gg/DGd8T53'))
 
         try:
-            await ctx.send(embed=StyledEmbed(description="<:warning:717043607298637825> Sorry, an unknown error occurred whilst executing this command. The error has been reported automatically. You can get support here: \nhttps://discord.gg/DGd8T53"))
+            await ctx.send(embed=StyledEmbed(description="<:warning:746377344393936997> Sorry, an unknown error occurred whilst executing this command. The error has been reported automatically. You can get support here: \nhttps://discord.gg/DGd8T53"))
         except:
             pass
 
@@ -54,7 +54,7 @@ class CommandErrorHandlerCog(commands.Cog, name="‎"):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
         channel = await self.bot.fetch_channel(report_channel)
-        error_embed = StyledEmbed(suppress_tips=True, title=f"<:warning:717043607298637825>  `{type(error)}`")
+        error_embed = StyledEmbed(suppress_tips=True, title=f"<:warning:746377344393936997>  `{type(error)}`")
         error_embed.set_author(name="Unhandled Error")
 
         # upload to hastebin
