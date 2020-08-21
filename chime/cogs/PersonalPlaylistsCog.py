@@ -16,7 +16,7 @@ from chime.misc.CustomCommand import custom_command
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import check_if_playlist_exists, search_song
+from chime.util import check_if_playlist_exists, search_song
 
 
 class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):

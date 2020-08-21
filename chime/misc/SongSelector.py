@@ -6,7 +6,7 @@ from discord.ext.commands import Bot, Context
 from wavelink import Track
 
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import get_song_selector_embed_desc_for_current_page, react_with_pagination_emoji
+from chime.util import get_song_selector_embed_desc_for_current_page, react_with_pagination_emoji
 
 
 class SongSelector:

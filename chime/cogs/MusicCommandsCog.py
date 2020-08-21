@@ -12,7 +12,7 @@ from chime.misc.BadRequestException import BadRequestException
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.misc.util import get_currently_playing_embed, search_song
+from chime.util import get_currently_playing_embed, search_song
 
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):

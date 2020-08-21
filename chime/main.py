@@ -12,7 +12,7 @@ from discord.ext import commands
 # Activate dev mode (start using 2nd token) if start-dev file is present in root directory!
 start_dev = os.path.isfile("./start-dev")
 
-version = "1.0.0"
+version = "1.0.2"
 prefix = "$" if start_dev else "*"
 
 report_channel = 722092978021072896
@@ -25,7 +25,7 @@ def start():
     from chime.cogs.StatsCog import StatsCog
     from chime.cogs.PersonalPlaylistsCog import PersonalPlaylistsCog
     from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
-    from chime.misc.util import get_token
+    from chime.util import get_token
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()

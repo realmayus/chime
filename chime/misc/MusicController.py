@@ -4,7 +4,7 @@ from typing import List
 import discord
 from wavelink import Player, Track
 
-from chime.misc.util import get_currently_playing_embed
+from chime.util import get_currently_playing_embed
 
 
 class MusicController:
