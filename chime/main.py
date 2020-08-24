@@ -25,14 +25,14 @@ def start():
     from chime.cogs.StatsCog import StatsCog
     from chime.cogs.PersonalPlaylistsCog import PersonalPlaylistsCog
     from chime.cogs.CommandErrorHandlerCog import CommandErrorHandlerCog
-    from chime.util import get_token
+    from chime.util import get_token, get_data_path
     from chime.cogs.HelpCommandCog import EmbedHelpCommand
     bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix), help_command=EmbedHelpCommand())
     bot.start_time = time.time()
     print("Starting chime v." + version + "…")
+    print(get_data_path("secret"))
 
-
-    cred = credentials.Certificate("./secret/firebase_creds.json")
+    cred = credentials.Certificate(get_data_path("secret") + "/firebase_creds.json")
     firebase_admin.initialize_app(cred)
     db: Client = firestore.client()
     print("> Initialized DB!")

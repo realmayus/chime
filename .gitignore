@@ -1,7 +1,7 @@
 # Project exclude paths
 venv/*
 
-secret/*
+chime/chime/secret/*
 start-dev
 
 lavalink/*
