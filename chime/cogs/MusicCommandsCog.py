@@ -113,8 +113,10 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                     raise BadRequestException("Couldn't add this item to the queue!")
             for track in tracks:
                 self.get_controller(ctx).queue.append(track)
-
-        await search_song(query, ctx, self.bot, success_callback, success_callback_url)
+        if query.lower() == "liked":
+            await self.bot.get_cog("Personal Playlists").playlist(ctx, "play", "liked")
+        else:
+            await search_song(query, ctx, self.bot, success_callback, success_callback_url)
 
     @commands.command(aliases=["stop"])
     async def pause(self, ctx):

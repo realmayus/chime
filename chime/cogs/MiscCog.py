@@ -33,8 +33,8 @@ class MiscCog(commands.Cog):
         if channel is not None:
             embed = StyledEmbed(title="Welcome to chime",
                                 description=":wave: Thanks for having me!\n\nchime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" 
-                                            "chime sports a **webinterface where you can manage settings for your server and create and manage personal playlists.** [Check it out here](https://google.com).  \n"
+                                            "chime sports a **webinterface where you can manage settings for your server and create and manage personal playlists.** [Check it out here](https://chime.realmayus.xyz).  \n"
                                             "With using chime you agree to our **[Terms of Service](https://chime.realmayus.xyz/terms)** and our **[Privacy Policy](https://chime.realmayus.xyz/privacy)**.\n"
-                                            "**More info and invite link [here](https://github.com/realmayus/chime)**\n\n**See all available commands with** `" + prefix + "help`")
+                                            "**More info and invite link [here](https://chime.realmayus.xyz)**\n\n**See all available commands with** `" + prefix + "help`")
             embed.set_image(url="https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK")
             await channel.send(embed=embed)

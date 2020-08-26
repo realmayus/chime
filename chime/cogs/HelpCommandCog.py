@@ -31,8 +31,8 @@ class EmbedHelpCommand(commands.HelpCommand):
         embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" \
                             "Want to support the development of chime while getting exclusive benefits? **[Donate](https://github.com/realmayus/chime)** \n \n" \
                             "**More info and invite link [here](https://github.com/realmayus/chime)** \n\n" \
+                            "Chime has a web app where you can manage and set up personal playlists and manage settings of your servers! https://chime.realmayus.xyz" \
                             "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**"
-
         for cog, commands in mapping.items():
             if cog is not None:  # We don't want commands without categories! >:c
                 name = cog.qualified_name

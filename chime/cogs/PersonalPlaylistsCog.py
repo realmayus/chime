@@ -230,8 +230,22 @@ class PersonalPlaylistsCog(commands.Cog, name="Personal Playlists"):
 
 
     @commands.command()
-    async def dislike(self, ctx):
-        """Removes the current song/the given song from your 'Liked' playlist"""
+    async def unlike(self, ctx):
+        """Removes the current song from your 'Liked' playlist"""
+        current_track: Track = self.get_controller(ctx).current_track
+        if not current_track:
+            raise BadRequestException("No track is currently playling!")
+
+        profile: DocumentReference = self.db.collection(str(ctx.author.id)).document("profile")
+        playlist_id = check_if_playlist_exists(profile, "Liked")
+        if not playlist_id:
+            raise BadRequestException("This song is not in your 'Liked' playlist.")
+        else:
+            playlist_doc_ref: DocumentReference = self.db.collection(str(ctx.author.id)).document(playlist_id)
+            contents = playlist_doc_ref.get(["contents"]).to_dict()["contents"]
+            contents = [item for item in contents if item["url"] != current_track.uri]
+            playlist_doc_ref.update({"contents": contents})
+            await ctx.message.add_reaction("<:ok:746377326245445653>")
 
     @commands.command()
     async def share(self, ctx, *, playlist):
