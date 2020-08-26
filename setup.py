@@ -14,10 +14,7 @@ setup(
     url="https://github.com/realmayus/chime",
     author_email="realmayus@gmail.com",
     license="MIT",
-    packages=["chime", "chime.cogs", "chime.misc", "chime.secret"],
-    package_data={
-        "chime.secret": ["firebase_creds.json", "token.ini"]
-    },
+    packages=["chime", "chime.cogs", "chime.misc"],
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 3 - Alpha",

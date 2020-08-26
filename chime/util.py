@@ -21,7 +21,7 @@ url_regex = re.compile(
 
 def get_token(start_dev: bool) -> str:
     config = configparser.ConfigParser()
-    config.read(get_data_path("secret") + "/token.ini")
+    config.read("secret/token.ini")
     section = config['token']
     if start_dev:
         return section["token-dev"]
@@ -120,10 +120,6 @@ async def search_song(query, ctx, bot, success_callback, success_callback_url):
 
     songselector = SongSelector(tracks, bot, success_callback, ctx)
     await songselector.send(songselector.get())
-
-
-def get_data_path(path):
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
 
 
 def get_song_progress_bar(current_time, duration, total_length=30):
