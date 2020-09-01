@@ -11,6 +11,7 @@ from wavelink import Player, TrackPlaylist
 
 from chime.main import prefix
 from chime.misc.BadRequestException import BadRequestException
+from chime.misc.CustomCommand import custom_command
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.StyledEmbed import StyledEmbed
@@ -276,8 +277,21 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException(
                 "The index I should jump to isn't part of the queue. Try to enter something lower.")
 
-    @commands.command()
+    @custom_command(
+        usage="lyrics <song name>",
+        examples=[
+            {
+                "ex": "lyrics",
+                "desc": "Shows the lyrics of the current song."
+            },
+            {
+                "ex": "lyrics never gonna give you up",
+                "desc": "Shows the lyrics of 'Never gonna give you up'"
+            }
+        ]
+    )
     async def lyrics(self, ctx: Context, *, args=None):
+        """Shows you the lyrics of the current or the specified song."""
         async with ctx.typing():
             if args:
                 song = args

@@ -80,8 +80,6 @@ class EmbedHelpCommand(commands.HelpCommand):
                 example_builder += f"\n`{ex['ex']}`\n{ex['desc']}"
             embed.add_field(name="**Examples**", value=example_builder)
 
-
-        desc += f"\n\n_Was this helpful?_  [**Yes**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=1) | [**Nope**](https://chime.realmayus.xyz/survey/help?command={group.name}&helpful=0)"
         embed.description = desc
 
         await self.get_destination().send(embed=embed)
