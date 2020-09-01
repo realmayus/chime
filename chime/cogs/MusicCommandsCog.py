@@ -1,6 +1,8 @@
+import functools
 from typing import Union
 
 import discord
+import lyricsgenius
 import wavelink
 from discord import Message, VoiceState, Member, VoiceChannel
 from discord.ext import commands
@@ -12,7 +14,7 @@ from chime.misc.BadRequestException import BadRequestException
 from chime.misc.MusicController import MusicController
 from chime.misc.PagedListEmbed import PagedListEmbed
 from chime.misc.StyledEmbed import StyledEmbed
-from chime.util import get_currently_playing_embed, search_song
+from chime.util import get_currently_playing_embed, search_song, get_secret_section
 
 
 class MusicCommandsCog(commands.Cog, name="Music Commands"):
@@ -26,6 +28,11 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
 
         self.bot.controllers = {}
 
+        try:
+            genius_token = get_secret_section()["genius"]
+            self.genius = lyricsgenius.Genius(genius_token)
+        except:
+            print("Couldn't load Genius integration for lyrics.")
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
@@ -269,6 +276,24 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             raise BadRequestException(
                 "The index I should jump to isn't part of the queue. Try to enter something lower.")
 
+    @commands.command()
+    async def lyrics(self, ctx: Context, *, args=None):
+        async with ctx.typing():
+            if args:
+                song = args
+            else:
+                song = self.get_controller(ctx).current_track.title
+                if not song:
+                    raise BadRequestException("No track is currently playling! You can enter the song's name as an argument.")
+            func = functools.partial(self.genius.search_song, song)
+            song = await self.bot.loop.run_in_executor(None, func)
+            if song is None:
+                if not args:
+                    raise BadRequestException("Couldn't find lyrics for the current song. Try entering the name of the song manually.")
+                raise BadRequestException("Couldn't find lyrics for the requested song.")
+            lyrics = song.lyrics
+        pagedlist = PagedListEmbed(f"**Lyrics for** {song.title} - {song.artist}", lyrics.split("\n"), ctx, self.bot, show_per_page=30)
+        await pagedlist.send(pagedlist.get())
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):

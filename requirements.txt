@@ -4,3 +4,4 @@ wavelink
 humanize
 captcha
 psutil
+lyricsgenius

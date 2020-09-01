@@ -19,10 +19,14 @@ url_regex = re.compile(
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
-def get_token(start_dev: bool) -> str:
+def get_secret_section() -> 'SectionProxy':
     config = configparser.ConfigParser()
     config.read("secret/token.ini")
-    section = config['token']
+    return config['token']
+
+
+def get_token(start_dev: bool) -> str:
+    section = get_secret_section()
     if start_dev:
         return section["token-dev"]
     return section['token']
