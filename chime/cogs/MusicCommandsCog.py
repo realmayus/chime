@@ -1,4 +1,5 @@
 import functools
+import re
 from typing import Union
 
 import discord
@@ -296,9 +297,15 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
             if args:
                 song = args
             else:
-                song = self.get_controller(ctx).current_track.title
-                if not song:
+                song = self.get_controller(ctx).current_track
+                player: Player = self.bot.wavelink.get_player(ctx.guild.id)
+                if not song or not player.is_playing:
                     raise BadRequestException("No track is currently playling! You can enter the song's name as an argument.")
+                song = song.title
+                song = re.sub(r"(\(.*\)|\[.*\]|（.*）|［.*］|【.*】|\d{4}|-+)", "", song)  # Sanitize video title (remove text in parenthesis, for example (OFFICIAL VIDEO) or [MV])
+                song = re.sub(r"[ ]{2,}", " ", song)  # replace two or more spaces with a single space
+                song = song.lstrip().rstrip()  # remove trailing whitespace
+                print(song)
             func = functools.partial(self.genius.search_song, song)
             song = await self.bot.loop.run_in_executor(None, func)
             if song is None:
