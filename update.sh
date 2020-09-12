@@ -11,7 +11,7 @@ git pull
 echo
 echo "Reinstalling chime…"
 echo
-venv/bin/python3 -m pip install -r requirements.txt
+venv/bin/python3 -m pip install --upgrade -r requirements.txt
 venv/bin/python3 -m pip install .
 echo
 echo "##################"
