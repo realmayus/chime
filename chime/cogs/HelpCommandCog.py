@@ -27,11 +27,10 @@ class EmbedHelpCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         embed = StyledEmbed(title='chime help')
-        embed.set_image(url="https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK")
-        embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to have the best performance while being as user-friendly as possible. \n\n" \
-                            "Want to support the development of chime while getting exclusive benefits? **[Donate](https://github.com/realmayus/chime)** \n \n" \
-                            "**More info and invite link [here](https://github.com/realmayus/chime)** \n\n" \
-                            "Chime has a web app where you can manage and set up personal playlists and manage settings of your servers! https://chime.realmayus.xyz" \
+        embed.set_thumbnail(url="https://raw.githubusercontent.com/realmayus/chime/master/assets/chime_banner.png?token=AJC6B5VTHEZ5UHNY7QNDCU263LCCK")
+        embed.description = "chime is a versatile, yet intuitive music bot for discord. It aims to be as user-friendly as possible while still boasting many features. \n\n" \
+                            "**More info and invite link [here](https://chime.realmayus.xyz)** \n\n" \
+                            "Chime has a **web app** where you can manage and set up personal playlists and manage settings of your servers! https://chime.realmayus.xyz \n\n" \
                             "**Use** `" + self.clean_prefix + "help [command]` **for more info on a command.**"
         for cog, commands in mapping.items():
             if cog is not None:  # We don't want commands without categories! >:c
