@@ -329,7 +329,6 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
                 channel: VoiceChannel = before.channel
                 if len(channel.members) <= 1:
                     embed = StyledEmbed(suppress_tips=True, description="**I left the channel due to inactivity.**")
-                    embed.set_footer(text="Please consider to donate, you'll get some nifty features!")
                     await controller.channel.send(embed=embed)
                     if controller.now_playing_msg:
                         await controller.now_playing_msg.delete()
