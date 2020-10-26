@@ -260,7 +260,7 @@ class MusicCommandsCog(commands.Cog, name="Music Commands"):
         await player.seek(seconds * 1000)
         await ctx.message.add_reaction("<:ok:746377326245445653>")
 
-    @commands.command(aliases=["jump", "skipto"])
+    @commands.command(aliases=["jump", "skipto", "goto"])
     async def jumpto(self, ctx: Context, position: int):
         """Jumps to the given position in the queue."""
         controller: MusicController = self.get_controller(ctx)
